@@ -42,11 +42,18 @@ main{padding:12px 12px 100px}
 .btn.green{background:#0e7a3d;color:#fff}
 .btn.line{background:#fff;border:1.5px solid #0e7a3d;color:#0e7a3d}
 .btnrow{display:flex;gap:10px;margin-top:14px}
+.photobtns{display:flex;gap:10px}
+.photobtns .btn{flex:1;padding:11px;font-size:14px}
 label{display:block;font-size:13px;font-weight:700;color:#374151;margin:12px 0 5px}
 input,select,textarea{width:100%;padding:11px;border:1.5px solid #d1d5db;border-radius:12px;font-size:15px;background:#fff}
 textarea{min-height:80px;resize:vertical}
-input[type=file]{padding:9px;font-size:13px;background:#fff}
-.preview{width:100%;max-height:170px;object-fit:cover;border-radius:12px;margin-top:8px}
+#photo-previews{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.pthumb{position:relative;width:64px;height:64px}
+.pthumb img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.px{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#111;color:#fff;border:none;font-size:11px;line-height:1}
+.dmini{width:52px;height:52px;border-radius:10px;object-fit:cover;border:2px solid #e5e7eb;flex:0 0 auto}
+.dmini.on{border-color:#0e7a3d}
+#d-gallery{display:flex;gap:8px;margin-top:8px;overflow-x:auto;padding-bottom:4px}
 .emojis{display:flex;gap:6px;flex-wrap:wrap}
 .em{width:42px;height:42px;border-radius:10px;border:1.5px solid #d1d5db;background:#fff;font-size:22px}
 .em.on{border-color:#0e7a3d;background:#d1fae5}
@@ -83,6 +90,7 @@ h2{font-size:18px;margin-bottom:4px}
   <section id="page-detail" hidden>
     <button class="back" onclick="show('page-home')">← Retour</button>
     <div id="d-thumb"></div>
+    <div id="d-gallery"></div>
     <h2 id="d-title" style="margin:12px 0 4px"></h2>
     <div class="price" id="d-price" style="font-size:19px"></div>
     <div class="meta" id="d-meta" style="margin-bottom:6px"></div>
@@ -99,9 +107,14 @@ h2{font-size:18px;margin-bottom:4px}
     <button class="back" onclick="show('page-home')">← Annuler</button>
     <h2>Publier une annonce</h2>
     <form id="sell-form" onsubmit="submitAd(event)">
-      <label>Photo de l'article (optionnel — galerie ou appareil photo)</label>
-      <input type="file" id="photo-input" accept="image/*">
-      <img id="photo-preview" class="preview" hidden alt="">
+      <label>Photos de l'article (max 3)</label>
+      <div class="photobtns">
+        <button type="button" class="btn line" onclick="pickPhotos('gallery')">🖼️ Galerie</button>
+        <button type="button" class="btn line" onclick="pickPhotos('camera')">📸 Appareil photo</button>
+      </div>
+      <input type="file" id="pick-gallery" accept="image/*" multiple hidden>
+      <input type="file" id="pick-camera" accept="image/*" capture="environment" hidden>
+      <div id="photo-previews"></div>
       <label>Choisis une icône (si pas de photo)</label>
       <div class="emojis" id="emoji-pick"></div>
       <input type="hidden" name="emoji" value="📦">
@@ -166,7 +179,7 @@ const DEMO=[
 
 let publicAds=[],mine=JSON.parse(localStorage.getItem("mm_ads")||"[]");
 let favs=new Set(JSON.parse(localStorage.getItem("mm_favs")||"[]"));
-let ads=[],currentCat="Tout",query="",online=false,fresh=[],photoFile=null;
+let ads=[],currentCat="Tout",query="",online=false,fresh=[],photoFiles=[];
 
 function saveMine(){localStorage.setItem("mm_ads",JSON.stringify(mine));}
 function saveFavs(){localStorage.setItem("mm_favs",JSON.stringify([...favs]));}
@@ -178,9 +191,11 @@ function showMine(){renderMine();show("page-mine");}
 function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
 function waNum(p){p=String(p).replace(/\D/g,"");if(p.startsWith("0"))p="261"+p.slice(1);else if(!p.startsWith("261"))p="261"+p;return p;}
 function fmtPhone(p){p=String(p).replace(/\D/g,"");if(p.startsWith("261")&&p.length===12)p="0"+p.slice(3);const m=p.replace(/(\d{3})(\d{2})(\d{3})(\d{2})/,"$1 $2 $3 $4");return m;}
+function photosOf(a){return (a.photo_urls&&a.photo_urls.length)?a.photo_urls:(a.photo_url?[a.photo_url]:[]);}
 function thumbHTML(a,big){
 const cls="thumb"+(big?" big":"");
-if(a.photo_url)return `<div class="${cls} photo"><img src="${esc(a.photo_url)}" alt="" loading="lazy"></div>`;
+const u=photosOf(a);
+if(u.length)return `<div class="${cls} photo"><img src="${esc(u[0])}" alt="" loading="lazy"></div>`;
 return `<div class="${cls} ${grad(a)}">${a.emoji}</div>`;
 }
 
@@ -208,7 +223,14 @@ function toggleFav(id){favs.has(id)?favs.delete(id):favs.add(id);saveFavs();if(!
 
 function openDetail(id){
 const a=ads.find(x=>x.id===id);if(!a)return;
- $("#d-thumb").innerHTML=thumbHTML(a,true);
+const urls=photosOf(a);
+if(urls.length){
+ $("#d-thumb").innerHTML=`<div class="thumb photo big"><img id="d-img" src="${esc(urls[0])}" alt=""></div>`;
+ $("#d-gallery").innerHTML=urls.length>1?urls.map((u,i)=>`<img class="dmini${i===0?" on":""}" src="${esc(u)}" alt="" onclick="swapPhoto('${esc(u)}',this)">`).join(""):"";
+}else{
+ $("#d-thumb").innerHTML=`<div class="thumb big ${grad(a)}">${a.emoji}</div>`;
+ $("#d-gallery").innerHTML="";
+}
  $("#d-title").textContent=a.title;
  $("#d-price").textContent=fmt(a.price);
 const d=a.created_at?new Date(a.created_at).toLocaleDateString("fr-FR"):a.date;
@@ -220,13 +242,20 @@ const d=a.created_at?new Date(a.created_at).toLocaleDateString("fr-FR"):a.date;
 show("page-detail");
 }
 
+function swapPhoto(u,el){
+const im=document.getElementById("d-img");
+if(im)im.src=u;
+document.querySelectorAll(".dmini").forEach(x=>x.classList.remove("on"));
+el.classList.add("on");
+}
+
 function renderMine(){
  $("#mine-list").innerHTML=mine.length?mine.map(a=>`<div class="card">${thumbHTML(a,false)}<div class="info"><div class="title">${esc(a.title)} ${a.pending?'<span style="color:#f59e0b;font-weight:700">⏳ en attente</span>':""}</div><div class="price">${fmt(a.price)}</div><div class="meta">📍 ${esc(a.city)} · ${a.cat}</div></div><button class="heart" style="position:static;font-size:22px" onclick="delAd(${a.id})">🗑️</button></div>`).join(""):`<p class="empty">Rien en attente. Tes publications apparaissent directement sur l'accueil.<br>(Les comptes vendeurs arrivent bientôt !)</p>`;
 }
 
 function delAd(id){mine=mine.filter(a=>a.id!==id);ads=[...publicAds,...mine];saveMine();renderMine();render();toast("Annonce supprimée");}
 
-/* ===== 📸 Photo : compression + envoi ===== */
+/* ===== 📸 Photos : compression + envoi ===== */
 function shrinkPhoto(file){
 return new Promise((resolve,reject)=>{
 const img=new Image();
@@ -258,11 +287,21 @@ if(!r.ok)throw new Error("upload "+r.status);
 return SB_URL+"/storage/v1/object/public/photos/"+name;
 }
 
- $("#photo-input").addEventListener("change",e=>{
-photoFile=e.target.files[0]||null;
-const p=$("#photo-preview");
-if(photoFile&&photoFile.type.startsWith("image/")){p.src=URL.createObjectURL(photoFile);p.hidden=false;}
-else{photoFile=null;p.hidden=true;}
+function pickPhotos(which){document.getElementById("pick-"+which).click();}
+function renderPreviews(){
+ $("#photo-previews").innerHTML=photoFiles.map((f,i)=>`<div class="pthumb"><img src="${f._url}" alt=""><button type="button" class="px" onclick="rmPhoto(${i})">✕</button></div>`).join("");
+}
+function rmPhoto(i){URL.revokeObjectURL(photoFiles[i]._url);photoFiles.splice(i,1);renderPreviews();}
+
+["pick-gallery","pick-camera"].forEach(id=>{
+document.getElementById(id).addEventListener("change",e=>{
+[...e.target.files].forEach(f=>{
+if(photoFiles.length<3&&f.type.startsWith("image/"))photoFiles.push(Object.assign(f,{_url:URL.createObjectURL(f)}));
+});
+if(photoFiles.length>=3)toast("Maximum 3 photos — garde les meilleures 📸");
+renderPreviews();
+e.target.value="";
+});
 });
 
 async function publishAd(a){
@@ -277,7 +316,15 @@ const f=e.target,btn=f.querySelector('button[type=submit]');
 const ad={title:f.title.value.trim(),price:+f.price.value,cat:f.cat.value,city:f.city.value,description:f.desc.value.trim(),emoji:f.emoji.value,phone:f.phone.value.trim()};
 btn.disabled=true;
 try{
-if(photoFile){btn.textContent="📸 Photo…";try{ad.photo_url=await uploadPhoto(photoFile);}catch(err){toast("📸 Photo non envoyée — publication sans photo");}}
+if(photoFiles.length){
+const urls=[];
+for(let i=0;i<photoFiles.length;i++){
+btn.textContent=`📸 Photo ${i+1}/${photoFiles.length}…`;
+try{urls.push(await uploadPhoto(photoFiles[i]));}catch(err){}
+}
+if(urls.length)ad.photo_urls=urls;
+if(urls.length<photoFiles.length)toast(" Certaines photos n'ont pas pu partir");
+}
 btn.textContent="Envoi…";
 const saved=await publishAd(ad);
 publicAds.unshift(saved);
@@ -290,8 +337,9 @@ saveMine();ads=[...publicAds,...mine];
 render();show("page-home");
 toast("📡 Pas de connexion — enregistrée sur ton téléphone");
 }
-photoFile=null;f.reset();
- $("#photo-preview").hidden=true;
+photoFiles.forEach(x=>URL.revokeObjectURL(x._url));
+photoFiles=[];renderPreviews();
+f.reset();
 document.querySelectorAll(".em").forEach(x=>x.classList.toggle("on",x.textContent==="📦"));
 btn.disabled=false;btn.textContent="Publier mon annonce";
 }
