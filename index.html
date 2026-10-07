@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0e7a3d">
-<title>BazarMada — Acheter & Vendre à Madagascar</title>
+<title>BazarMada — Acheter &amp; Vendre à Madagascar</title>
 <link rel="manifest" href="/manifest.json">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif}
@@ -14,6 +14,7 @@ header{background:linear-gradient(135deg,#0e7a3d,#065f46);color:#fff;padding:14p
 .logo span{color:#a7f3d0}
 .tag{font-size:12px;opacity:.85;margin-bottom:10px}
 #search{width:100%;padding:11px 14px;border:none;border-radius:12px;font-size:15px;outline:none}
+#status{background:#fef3c7;color:#92400e;font-size:13px;padding:8px 12px;text-align:center}
 #cats{display:flex;gap:8px;overflow-x:auto;padding:10px 12px;background:#f3f4f6;scrollbar-width:none}
 #cats::-webkit-scrollbar{display:none}
 .chip{flex:0 0 auto;padding:7px 14px;border-radius:999px;border:1px solid #d1d5db;background:#fff;font-size:13px;font-weight:600;color:#374151}
@@ -49,7 +50,7 @@ textarea{min-height:80px;resize:vertical}
 .bottom button{border:none;background:none;font-size:11px;font-weight:700;color:#6b7280;display:flex;flex-direction:column;align-items:center;gap:2px}
 .bottom button .i{font-size:20px}
 .fab{width:58px;height:58px;border-radius:50%;background:#0e7a3d;color:#fff!important;font-size:30px!important;transform:translateY(-16px);box-shadow:0 6px 16px rgba(14,122,61,.45)}
-.note{font-size:12px;color:#6b7280;margin-top:10px;text-align:center}
+.note{font-size:12px;color:#6b7280;margin-top:10px;text-align:center;line-height:1.4}
 #toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:50}
 #toast.show{opacity:1}
 h2{font-size:18px;margin-bottom:4px}
@@ -63,23 +64,25 @@ h2{font-size:18px;margin-bottom:4px}
   <input id="search" type="search" placeholder="Rechercher un article, une ville…">
 </header>
 
+<div id="status" hidden></div>
 <div id="cats"></div>
 
 <main>
-  <section id="page-home"><div id="ads"></div></section>
+  <section id="page-home"><div id="ads"><p class="empty">⏳ Chargement…</p></div></section>
 
   <section id="page-detail" hidden>
     <button class="back" onclick="show('page-home')">← Retour</button>
     <div id="d-thumb" class="thumb big">📦</div>
     <h2 id="d-title" style="margin:12px 0 4px"></h2>
     <div class="price" id="d-price" style="font-size:19px"></div>
-    <div class="meta" id="d-meta" style="margin-bottom:10px"></div>
+    <div class="meta" id="d-meta" style="margin-bottom:6px"></div>
+    <div class="meta" id="d-phone" style="font-weight:700;color:#111;margin-bottom:10px"></div>
     <p id="d-desc" style="font-size:14px;line-height:1.5;color:#374151"></p>
     <div class="btnrow">
       <a id="d-call" class="btn green" href="tel:">📞 Appeler</a>
       <a id="d-wa" class="btn line" target="_blank" href="#">💬 WhatsApp</a>
     </div>
-    <p class="note">Démo : numéro du vendeur fictif pour l'instant.</p>
+    <p class="note">⚠️ Sécurité : rencontre le vendeur en journée, vérifie l'article avant de payer, ne verse jamais d'acompte à un inconnu.</p>
   </section>
 
   <section id="page-sell" hidden>
@@ -93,6 +96,8 @@ h2{font-size:18px;margin-bottom:4px}
       <input name="title" required maxlength="70" placeholder="Ex : Samsung A54, comme neuf">
       <label>Prix en Ariary *</label>
       <input name="price" type="number" required min="100" placeholder="Ex : 450000">
+      <label>Ton numéro de téléphone *</label>
+      <input name="phone" type="tel" required pattern="[0-9 ]{9,13}" placeholder="Ex : 034 12 345 67">
       <label>Catégorie</label>
       <select name="cat">
         <option>Téléphones</option><option>Informatique</option><option>Véhicules</option>
@@ -126,22 +131,28 @@ h2{font-size:18px;margin-bottom:4px}
 <div id="toast"></div>
 
 <script>
+/* ====== CONFIGURATION ====== */
+const SB_URL="https://wisourxbnsnmsfgrskhv.supabase.co";
+const SB_KEY="sb_publishable_0mt79uNrwTZCeU1BxPQwaw_5NWpPo_V";
+const API=SB_URL+"/rest/v1/ads";
+const H={apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json"};
+
 const $=s=>document.querySelector(s);
 const CATS=["Téléphones","Informatique","Véhicules","Immobilier","Maison","Mode","Emploi","Divers"];
 const DEMO=[
-{id:1,title:"iPhone 11 128 Go — très bon état",price:1450000,cat:"Téléphones",city:"Antananarivo",desc:"Batterie 87 %, aucune rayure, avec chargeur d'origine. Livraison possible dans Tana.",emoji:"📱"},
-{id:2,title:"Ordinateur portable HP i5 8Go RAM",price:2350000,cat:"Informatique",city:"Antananarivo",desc:"Core i5 8e génération, SSD 256 Go. Parfait pour les études et le travail.",emoji:"💻"},
-{id:3,title:"Moto SYM 125 — entretien à jour",price:6800000,cat:"Véhicules",city:"Antsirabe",desc:"9 800 km, papiers en règle, pneus neufs.",emoji:"🏍️"},
-{id:4,title:"Terrain 400 m² à Ambohidratrimo",price:19000000,cat:"Immobilier",city:"Antananarivo",desc:"Titre disponible, bords bitumés, à 5 min de la RN4.",emoji:"🏠"},
-{id:5,title:"Canapé 3 places tissu gris",price:850000,cat:"Maison",city:"Toamasina",desc:"Acheté l'année dernière, très propre. À récupérer sur place.",emoji:"🛋️"},
-{id:6,title:"Lamba oany fait main",price:120000,cat:"Mode",city:"Fianarantsoa",desc:"Plusieurs tailles et couleurs disponibles.",emoji:"👗"},
-{id:7,title:"Poussins — 50 unités vaccinés",price:150000,cat:"Divers",city:"Mahajanga",desc:"Élevage de qualité, idéal pour démarrer un élevage.",emoji:"🐂"},
-{id:8,title:"Riz makalioka — sac de 50 kg",price:210000,cat:"Divers",city:"Marovoay",desc:"Récolte récente, qualité supérieure, livraison à discuter.",emoji:"🌾"}
+{id:1,title:"iPhone 11 128 Go — très bon état",price:1450000,cat:"Téléphones",city:"Antananarivo",desc:"Batterie 87 %, aucune rayure, avec chargeur d'origine.",emoji:"📱",phone:"0340000000"},
+{id:2,title:"Ordinateur portable HP i5",price:2350000,cat:"Informatique",city:"Antananarivo",desc:"Core i5, SSD 256 Go. Parfait pour les études.",emoji:"💻",phone:"0340000000"},
+{id:3,title:"Moto SYM 125 — entretien à jour",price:6800000,cat:"Véhicules",city:"Antsirabe",desc:"9 800 km, papiers en règle, pneus neufs.",emoji:"🏍️",phone:"0340000000"},
+{id:4,title:"Terrain 400 m² à Ambohidratrimo",price:19000000,cat:"Immobilier",city:"Antananarivo",desc:"Titre disponible, à 5 min de la RN4.",emoji:"🏠",phone:"0340000000"},
+{id:5,title:"Canapé 3 places tissu gris",price:850000,cat:"Maison",city:"Toamasina",desc:"Très propre. À récupérer sur place.",emoji:"🛋️",phone:"0340000000"},
+{id:6,title:"Lamba oany fait main",price:120000,cat:"Mode",city:"Fianarantsoa",desc:"Plusieurs tailles et couleurs.",emoji:"👗",phone:"0340000000"},
+{id:7,title:"Poussins — 50 unités vaccinés",price:150000,cat:"Divers",city:"Mahajanga",desc:"Idéal pour démarrer un élevage.",emoji:"🐂",phone:"0340000000"},
+{id:8,title:"Riz makalioka — sac de 50 kg",price:210000,cat:"Divers",city:"Marovoay",desc:"Récolte récente, qualité supérieure.",emoji:"🌾",phone:"0340000000"}
 ];
-let mine=JSON.parse(localStorage.getItem("mm_ads")||"[]");
+
+let publicAds=[],mine=JSON.parse(localStorage.getItem("mm_ads")||"[]");
 let favs=new Set(JSON.parse(localStorage.getItem("mm_favs")||"[]"));
-let ads=[...mine,...DEMO];
-let currentCat="Tout",query="";
+let ads=[],currentCat="Tout",query="",online=false,fresh=[];
 
 function saveMine(){localStorage.setItem("mm_ads",JSON.stringify(mine));}
 function saveFavs(){localStorage.setItem("mm_favs",JSON.stringify([...favs]));}
@@ -150,7 +161,9 @@ function grad(a){return "g"+(a.id%5);}
 function esc(s){return String(s).replace(/</g,"&lt;");}
 function show(id){document.querySelectorAll("main section").forEach(s=>s.hidden=(s.id!==id));window.scrollTo(0,0);}
 function showMine(){renderMine();show("page-mine");}
-function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200);}
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
+function waNum(p){p=String(p).replace(/\D/g,"");if(p.startsWith("0"))p="261"+p.slice(1);else if(!p.startsWith("261"))p="261"+p;return p;}
+function fmtPhone(p){p=String(p).replace(/\D/g,"");if(p.startsWith("261")&&p.length===12)p="0"+p.slice(3);const m=p.replace(/(\d{3})(\d{2})(\d{3})(\d{2})/,"$1 $2 $3 $4");return m;}
 
 function card(a){
 return `<div class="card" onclick="openDetail(${a.id})">
@@ -162,8 +175,14 @@ return `<div class="card" onclick="openDetail(${a.id})">
 }
 
 function render(){
-const list=ads.filter(a=>(currentCat==="Tout"||a.cat===currentCat)&&(a.title+" "+a.desc+" "+a.city).toLowerCase().includes(query));
- $("#ads").innerHTML=list.length?list.map(card).join(""):`<p class="empty">Aucune annonce trouvée 🙏<br>Essaie une autre recherche ou une autre catégorie.</p>`;
+const list=ads.filter(a=>(currentCat==="Tout"||a.cat===currentCat)&&(a.title+" "+a.city).toLowerCase().includes(query));
+ $("#ads").innerHTML=list.length?list.map(card).join(""):`<p class="empty">Aucune annonce trouvée 🙏<br>Essaie une autre recherche — ou publie la première !</p>`;
+}
+
+function renderStatus(){
+const s=$("#status");
+if(online){s.hidden=true;}
+else{s.hidden=false;s.textContent="📡 Mode démo — connexion à la base impossible (vérifie Internet ou préviens-moi)";}
 }
 
 function toggleFav(id){favs.has(id)?favs.delete(id):favs.add(id);saveFavs();if(!$("#page-home").hidden)render();}
@@ -174,27 +193,72 @@ const a=ads.find(x=>x.id===id);if(!a)return;
  $("#d-thumb").textContent=a.emoji;
  $("#d-title").textContent=a.title;
  $("#d-price").textContent=fmt(a.price);
- $("#d-meta").textContent="📍 "+a.city+" · "+a.cat+(a.date?" · publié le "+a.date:"");
+const d=a.created_at?new Date(a.created_at).toLocaleDateString("fr-FR"):a.date;
+ $("#d-meta").textContent="📍 "+a.city+" · "+a.cat+(d?" · publié le "+d:"");
+ $("#d-phone").textContent="☎️ Vendeur : "+fmtPhone(a.phone||"");
  $("#d-desc").textContent=a.desc||"";
- $("#d-call").href="tel:+261340000000";
- $("#d-wa").href="https://wa.me/261340000000?text="+encodeURIComponent("Bonjour ! Je suis intéressé par votre annonce : "+a.title);
+ $("#d-call").href="tel:+"+waNum(a.phone||"");
+ $("#d-wa").href="https://wa.me/"+waNum(a.phone||"")+"?text="+encodeURIComponent("Bonjour ! Je suis intéressé par votre annonce : "+a.title);
 show("page-detail");
 }
 
 function renderMine(){
- $("#mine-list").innerHTML=mine.length?mine.map(a=>`<div class="card"><div class="thumb ${grad(a)}">${a.emoji}</div><div class="info"><div class="title">${esc(a.title)}</div><div class="price">${fmt(a.price)}</div><div class="meta">📍 ${esc(a.city)} · ${a.cat}</div></div><button class="heart" style="position:static;font-size:22px" onclick="delAd(${a.id})">🗑️</button></div>`).join(""):`<p class="empty">Tu n'as pas encore publié d'annonce.<br>Appuie sur le gros bouton ＋ pour vendre ton premier article !</p>`;
+ $("#mine-list").innerHTML=mine.length?mine.map(a=>`<div class="card"><div class="thumb ${grad(a)}">${a.emoji}</div><div class="info"><div class="title">${esc(a.title)} ${a.pending?'<span style="color:#f59e0b;font-weight:700">⏳ en attente</span>':""}</div><div class="price">${fmt(a.price)}</div><div class="meta">📍 ${esc(a.city)} · ${a.cat}</div></div><button class="heart" style="position:static;font-size:22px" onclick="delAd(${a.id})">🗑️</button></div>`).join(""):`<p class="empty">Rien en attente. Tes publications apparaissent directement sur l'accueil.<br>(Les comptes vendeurs arrivent bientôt !)</p>`;
 }
 
-function delAd(id){mine=mine.filter(a=>a.id!==id);ads=[...mine,...DEMO];saveMine();renderMine();render();toast("Annonce supprimée");}
+function delAd(id){mine=mine.filter(a=>a.id!==id);ads=[...publicAds,...mine];saveMine();renderMine();render();toast("Annonce supprimée");}
 
-function submitAd(e){
+async function publishAd(a){
+const r=await fetch(API,{method:"POST",headers:{...H,Prefer:"return=representation"},body:JSON.stringify([a])});
+if(!r.ok)throw new Error("HTTP "+r.status);
+return (await r.json())[0];
+}
+
+async function submitAd(e){
 e.preventDefault();
-const f=e.target;
-mine.unshift({id:Date.now(),title:f.title.value.trim(),price:+f.price.value,cat:f.cat.value,city:f.city.value,desc:f.desc.value.trim(),emoji:f.emoji.value,date:new Date().toLocaleDateString("fr-FR"),mine:true});
-ads=[...mine,...DEMO];
-saveMine();f.reset();
+const f=e.target,btn=f.querySelector('button[type=submit]');
+const ad={title:f.title.value.trim(),price:+f.price.value,cat:f.cat.value,city:f.city.value,description:f.desc.value.trim(),emoji:f.emoji.value,phone:f.phone.value.trim()};
+btn.disabled=true;btn.textContent="Envoi…";
+try{
+  const saved=await publishAd(ad);
+  publicAds.unshift(saved);
+  ads=[...publicAds,...mine];
+  render();show("page-home");
+  toast("✅ Annonce publiée en ligne !");
+}catch(err){
+  mine.unshift({...ad,id:Date.now(),date:new Date().toLocaleDateString("fr-FR"),pending:true});
+  saveMine();ads=[...publicAds,...mine];
+  render();show("page-home");
+  toast("📡 Pas de connexion — enregistrée sur ton téléphone");
+}
+f.reset();
 document.querySelectorAll(".em").forEach(x=>x.classList.toggle("on",x.textContent==="📦"));
-show("page-home");render();toast("✅ Annonce publiée !");
+btn.disabled=false;btn.textContent="Publier mon annonce";
+}
+
+async function syncPending(){
+if(!mine.length)return;
+const keep=[];
+for(const a of mine){
+  if(a.pending){
+    try{const saved=await publishAd({title:a.title,price:a.price,cat:a.cat,city:a.city,description:a.description,emoji:a.emoji,phone:a.phone});fresh.unshift(saved);}
+    catch(e){keep.push(a);}
+  }else keep.push(a);
+}
+mine=keep;saveMine();
+if(fresh.length)toast("✅ "+fresh.length+" annonce(s) envoyée(s) en ligne !");
+}
+
+async function loadAds(){
+try{
+  const r=await fetch(API+"?select=*&status=eq.active&order=created_at.desc",{headers:H});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  publicAds=[...fresh,...(await r.json())];
+  online=true;
+}catch(e){publicAds=[...DEMO];online=false;}
+fresh=[];
+ads=[...publicAds,...mine];
+renderStatus();render();
 }
 
 ["Tout",...CATS].forEach(c=>{
@@ -214,7 +278,12 @@ b.onclick=()=>{form.emoji.value=em;document.querySelectorAll(".em").forEach(x=>x
 });
 
  $("#search").addEventListener("input",e=>{query=e.target.value.toLowerCase();render();});
-render();
+
+(async function init(){
+await syncPending();
+await loadAds();
+})();
+
 if("serviceWorker" in navigator){try{navigator.serviceWorker.register("/sw.js");}catch(e){}}
 </script>
 </body>
