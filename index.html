@@ -22,7 +22,9 @@ header{background:linear-gradient(135deg,#0e7a3d,#065f46);color:#fff;padding:14p
 main{padding:12px 12px 100px}
 .card{display:flex;gap:12px;align-items:center;background:#fff;border-radius:14px;padding:10px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,.06);position:relative}
 .thumb{width:70px;height:70px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:32px;flex:0 0 auto}
-.thumb.big{width:100%;height:190px;font-size:95px;border-radius:16px}
+.thumb.big{width:100%;height:220px;font-size:95px;border-radius:16px}
+.thumb.photo{padding:0;overflow:hidden}
+.thumb.photo img{width:100%;height:100%;object-fit:cover;display:block}
 .g0{background:linear-gradient(135deg,#10b981,#065f46)}
 .g1{background:linear-gradient(135deg,#3b82f6,#1e3a8a)}
 .g2{background:linear-gradient(135deg,#f59e0b,#92400e)}
@@ -43,6 +45,8 @@ main{padding:12px 12px 100px}
 label{display:block;font-size:13px;font-weight:700;color:#374151;margin:12px 0 5px}
 input,select,textarea{width:100%;padding:11px;border:1.5px solid #d1d5db;border-radius:12px;font-size:15px;background:#fff}
 textarea{min-height:80px;resize:vertical}
+input[type=file]{padding:9px;font-size:13px;background:#fff}
+.preview{width:100%;max-height:170px;object-fit:cover;border-radius:12px;margin-top:8px}
 .emojis{display:flex;gap:6px;flex-wrap:wrap}
 .em{width:42px;height:42px;border-radius:10px;border:1.5px solid #d1d5db;background:#fff;font-size:22px}
 .em.on{border-color:#0e7a3d;background:#d1fae5}
@@ -78,7 +82,7 @@ h2{font-size:18px;margin-bottom:4px}
 
   <section id="page-detail" hidden>
     <button class="back" onclick="show('page-home')">← Retour</button>
-    <div id="d-thumb" class="thumb big">📦</div>
+    <div id="d-thumb"></div>
     <h2 id="d-title" style="margin:12px 0 4px"></h2>
     <div class="price" id="d-price" style="font-size:19px"></div>
     <div class="meta" id="d-meta" style="margin-bottom:6px"></div>
@@ -95,7 +99,10 @@ h2{font-size:18px;margin-bottom:4px}
     <button class="back" onclick="show('page-home')">← Annuler</button>
     <h2>Publier une annonce</h2>
     <form id="sell-form" onsubmit="submitAd(event)">
-      <label>Choisis une icône</label>
+      <label>Photo de l'article (optionnel — galerie ou appareil photo)</label>
+      <input type="file" id="photo-input" accept="image/*">
+      <img id="photo-preview" class="preview" hidden alt="">
+      <label>Choisis une icône (si pas de photo)</label>
       <div class="emojis" id="emoji-pick"></div>
       <input type="hidden" name="emoji" value="📦">
       <label>Titre *</label>
@@ -159,22 +166,27 @@ const DEMO=[
 
 let publicAds=[],mine=JSON.parse(localStorage.getItem("mm_ads")||"[]");
 let favs=new Set(JSON.parse(localStorage.getItem("mm_favs")||"[]"));
-let ads=[],currentCat="Tout",query="",online=false,fresh=[];
+let ads=[],currentCat="Tout",query="",online=false,fresh=[],photoFile=null;
 
 function saveMine(){localStorage.setItem("mm_ads",JSON.stringify(mine));}
 function saveFavs(){localStorage.setItem("mm_favs",JSON.stringify([...favs]));}
 function fmt(n){return new Intl.NumberFormat("fr-FR").format(n)+" Ar";}
 function grad(a){return "g"+(a.id%5);}
-function esc(s){return String(s).replace(/</g,"&lt;");}
+function esc(s){return String(s).replace(/</g,"&lt;").replace(/"/g,"&quot;");}
 function show(id){document.querySelectorAll("main section").forEach(s=>s.hidden=(s.id!==id));window.scrollTo(0,0);}
 function showMine(){renderMine();show("page-mine");}
 function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
 function waNum(p){p=String(p).replace(/\D/g,"");if(p.startsWith("0"))p="261"+p.slice(1);else if(!p.startsWith("261"))p="261"+p;return p;}
 function fmtPhone(p){p=String(p).replace(/\D/g,"");if(p.startsWith("261")&&p.length===12)p="0"+p.slice(3);const m=p.replace(/(\d{3})(\d{2})(\d{3})(\d{2})/,"$1 $2 $3 $4");return m;}
+function thumbHTML(a,big){
+const cls="thumb"+(big?" big":"");
+if(a.photo_url)return `<div class="${cls} photo"><img src="${esc(a.photo_url)}" alt="" loading="lazy"></div>`;
+return `<div class="${cls} ${grad(a)}">${a.emoji}</div>`;
+}
 
 function card(a){
 return `<div class="card" onclick="openDetail(${a.id})">
-<div class="thumb ${grad(a)}">${a.emoji}</div>
+ ${thumbHTML(a,false)}
 <div class="info"><div class="title">${esc(a.title)}</div>
 <div class="price">${fmt(a.price)}</div>
 <div class="meta">📍 ${esc(a.city)} · ${a.cat}</div></div>
@@ -196,24 +208,62 @@ function toggleFav(id){favs.has(id)?favs.delete(id):favs.add(id);saveFavs();if(!
 
 function openDetail(id){
 const a=ads.find(x=>x.id===id);if(!a)return;
- $("#d-thumb").className="thumb big "+grad(a);
- $("#d-thumb").textContent=a.emoji;
+ $("#d-thumb").innerHTML=thumbHTML(a,true);
  $("#d-title").textContent=a.title;
  $("#d-price").textContent=fmt(a.price);
 const d=a.created_at?new Date(a.created_at).toLocaleDateString("fr-FR"):a.date;
  $("#d-meta").textContent="📍 "+a.city+" · "+a.cat+(d?" · publié le "+d:"");
  $("#d-phone").textContent="☎️ Vendeur : "+fmtPhone(a.phone||"");
- $("#d-desc").textContent=a.desc||"";
+ $("#d-desc").textContent=a.description||a.desc||"";
  $("#d-call").href="tel:+"+waNum(a.phone||"");
  $("#d-wa").href="https://wa.me/"+waNum(a.phone||"")+"?text="+encodeURIComponent("Bonjour ! Je suis intéressé par votre annonce : "+a.title);
 show("page-detail");
 }
 
 function renderMine(){
- $("#mine-list").innerHTML=mine.length?mine.map(a=>`<div class="card"><div class="thumb ${grad(a)}">${a.emoji}</div><div class="info"><div class="title">${esc(a.title)} ${a.pending?'<span style="color:#f59e0b;font-weight:700">⏳ en attente</span>':""}</div><div class="price">${fmt(a.price)}</div><div class="meta">📍 ${esc(a.city)} · ${a.cat}</div></div><button class="heart" style="position:static;font-size:22px" onclick="delAd(${a.id})">🗑️</button></div>`).join(""):`<p class="empty">Rien en attente. Tes publications apparaissent directement sur l'accueil.<br>(Les comptes vendeurs arrivent bientôt !)</p>`;
+ $("#mine-list").innerHTML=mine.length?mine.map(a=>`<div class="card">${thumbHTML(a,false)}<div class="info"><div class="title">${esc(a.title)} ${a.pending?'<span style="color:#f59e0b;font-weight:700">⏳ en attente</span>':""}</div><div class="price">${fmt(a.price)}</div><div class="meta">📍 ${esc(a.city)} · ${a.cat}</div></div><button class="heart" style="position:static;font-size:22px" onclick="delAd(${a.id})">🗑️</button></div>`).join(""):`<p class="empty">Rien en attente. Tes publications apparaissent directement sur l'accueil.<br>(Les comptes vendeurs arrivent bientôt !)</p>`;
 }
 
 function delAd(id){mine=mine.filter(a=>a.id!==id);ads=[...publicAds,...mine];saveMine();renderMine();render();toast("Annonce supprimée");}
+
+/* ===== 📸 Photo : compression + envoi ===== */
+function shrinkPhoto(file){
+return new Promise((resolve,reject)=>{
+const img=new Image();
+img.onload=()=>{
+const max=1024;
+let w=img.width,h=img.height;
+if(w>h&&w>max){h=Math.round(h*max/w);w=max;}
+else if(h>=w&&h>max){w=Math.round(w*max/h);h=max;}
+const c=document.createElement("canvas");
+c.width=w;c.height=h;
+c.getContext("2d").drawImage(img,0,0,w,h);
+c.toBlob(b=>b?resolve(b):reject(new Error("compression")),"image/jpeg",0.72);
+URL.revokeObjectURL(img.src);
+};
+img.onerror=()=>reject(new Error("lecture image"));
+img.src=URL.createObjectURL(file);
+});
+}
+
+async function uploadPhoto(file){
+const blob=await shrinkPhoto(file);
+const name="ad_"+Date.now()+"_"+Math.floor(Math.random()*1e6)+".jpg";
+const r=await fetch(SB_URL+"/storage/v1/object/photos/"+name,{
+method:"POST",
+headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"image/jpeg"},
+body:blob
+});
+if(!r.ok)throw new Error("upload "+r.status);
+return SB_URL+"/storage/v1/object/public/photos/"+name;
+}
+
+ $("#photo-input").addEventListener("change",e=>{
+photoFile=e.target.files[0]||null;
+const p=$("#photo-preview");
+if(photoFile&&photoFile.type.startsWith("image/")){p.src=URL.createObjectURL(photoFile);p.hidden=false;}
+else{photoFile=null;p.hidden=true;}
+});
 
 async function publishAd(a){
 const r=await fetch(API,{method:"POST",headers:{...H,Prefer:"return=representation"},body:JSON.stringify([a])});
@@ -225,20 +275,23 @@ async function submitAd(e){
 e.preventDefault();
 const f=e.target,btn=f.querySelector('button[type=submit]');
 const ad={title:f.title.value.trim(),price:+f.price.value,cat:f.cat.value,city:f.city.value,description:f.desc.value.trim(),emoji:f.emoji.value,phone:f.phone.value.trim()};
-btn.disabled=true;btn.textContent="Envoi…";
+btn.disabled=true;
 try{
-  const saved=await publishAd(ad);
-  publicAds.unshift(saved);
-  ads=[...publicAds,...mine];
-  render();show("page-home");
-  toast("✅ Annonce publiée en ligne !");
+if(photoFile){btn.textContent="📸 Photo…";try{ad.photo_url=await uploadPhoto(photoFile);}catch(err){toast("📸 Photo non envoyée — publication sans photo");}}
+btn.textContent="Envoi…";
+const saved=await publishAd(ad);
+publicAds.unshift(saved);
+ads=[...publicAds,...mine];
+render();show("page-home");
+toast("✅ Annonce publiée en ligne !");
 }catch(err){
-  mine.unshift({...ad,id:Date.now(),date:new Date().toLocaleDateString("fr-FR"),pending:true});
-  saveMine();ads=[...publicAds,...mine];
-  render();show("page-home");
-  toast("📡 Pas de connexion — enregistrée sur ton téléphone");
+mine.unshift({...ad,id:Date.now(),date:new Date().toLocaleDateString("fr-FR"),pending:true});
+saveMine();ads=[...publicAds,...mine];
+render();show("page-home");
+toast("📡 Pas de connexion — enregistrée sur ton téléphone");
 }
-f.reset();
+photoFile=null;f.reset();
+ $("#photo-preview").hidden=true;
 document.querySelectorAll(".em").forEach(x=>x.classList.toggle("on",x.textContent==="📦"));
 btn.disabled=false;btn.textContent="Publier mon annonce";
 }
@@ -247,10 +300,10 @@ async function syncPending(){
 if(!mine.length)return;
 const keep=[];
 for(const a of mine){
-  if(a.pending){
-    try{const saved=await publishAd({title:a.title,price:a.price,cat:a.cat,city:a.city,description:a.description,emoji:a.emoji,phone:a.phone});fresh.unshift(saved);}
-    catch(e){keep.push(a);}
-  }else keep.push(a);
+if(a.pending){
+try{const saved=await publishAd({title:a.title,price:a.price,cat:a.cat,city:a.city,description:a.description,emoji:a.emoji,phone:a.phone});fresh.unshift(saved);}
+catch(e){keep.push(a);}
+}else keep.push(a);
 }
 mine=keep;saveMine();
 if(fresh.length)toast("✅ "+fresh.length+" annonce(s) envoyée(s) en ligne !");
@@ -258,10 +311,10 @@ if(fresh.length)toast("✅ "+fresh.length+" annonce(s) envoyée(s) en ligne !");
 
 async function loadAds(){
 try{
-  const r=await fetch(API+"?select=*&status=eq.active&order=created_at.desc",{headers:H});
-  if(!r.ok)throw new Error("HTTP "+r.status);
-  publicAds=[...fresh,...(await r.json())];
-  online=true;
+const r=await fetch(API+"?select=*&status=eq.active&order=created_at.desc",{headers:H});
+if(!r.ok)throw new Error("HTTP "+r.status);
+publicAds=[...fresh,...(await r.json())];
+online=true;
 }catch(e){publicAds=[...DEMO];online=false;}
 fresh=[];
 ads=[...publicAds,...mine];
