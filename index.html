@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e7a3d">
+<title>MadaMarket — Acheter & Vendre à Madagascar</title>
+<link rel="manifest" href="/manifest.json">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif}
+body{background:#f3f4f6;color:#111}
+header{background:linear-gradient(135deg,#0e7a3d,#065f46);color:#fff;padding:14px 16px 12px;position:sticky;top:0;z-index:10}
+.logo{font-size:22px;font-weight:800}
+.logo span{color:#a7f3d0}
+.tag{font-size:12px;opacity:.85;margin-bottom:10px}
+#search{width:100%;padding:11px 14px;border:none;border-radius:12px;font-size:15px;outline:none}
+#cats{display:flex;gap:8px;overflow-x:auto;padding:10px 12px;background:#f3f4f6;scrollbar-width:none}
+#cats::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:7px 14px;border-radius:999px;border:1px solid #d1d5db;background:#fff;font-size:13px;font-weight:600;color:#374151}
+.chip.on{background:#0e7a3d;border-color:#0e7a3d;color:#fff}
+main{padding:12px 12px 100px}
+.card{display:flex;gap:12px;align-items:center;background:#fff;border-radius:14px;padding:10px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,.06);position:relative}
+.thumb{width:70px;height:70px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:32px;flex:0 0 auto}
+.thumb.big{width:100%;height:190px;font-size:95px;border-radius:16px}
+.g0{background:linear-gradient(135deg,#10b981,#065f46)}
+.g1{background:linear-gradient(135deg,#3b82f6,#1e3a8a)}
+.g2{background:linear-gradient(135deg,#f59e0b,#92400e)}
+.g3{background:linear-gradient(135deg,#ef4444,#7f1d1d)}
+.g4{background:linear-gradient(135deg,#8b5cf6,#4c1d95)}
+.info{flex:1;min-width:0}
+.title{font-weight:700;font-size:14px;margin-bottom:3px}
+.price{color:#0e7a3d;font-weight:800;font-size:15px;margin-bottom:3px}
+.meta{font-size:12px;color:#6b7280}
+.heart{position:absolute;top:8px;right:8px;border:none;background:none;font-size:20px;color:#d1d5db}
+.heart.on{color:#ef4444}
+.empty{text-align:center;color:#6b7280;padding:30px 10px;font-size:14px}
+.back{border:none;background:#e5e7eb;color:#111;padding:8px 14px;border-radius:10px;font-weight:700;font-size:13px;margin-bottom:12px}
+.btn{display:block;width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:800;text-align:center;text-decoration:none}
+.btn.green{background:#0e7a3d;color:#fff}
+.btn.line{background:#fff;border:1.5px solid #0e7a3d;color:#0e7a3d}
+.btnrow{display:flex;gap:10px;margin-top:14px}
+label{display:block;font-size:13px;font-weight:700;color:#374151;margin:12px 0 5px}
+input,select,textarea{width:100%;padding:11px;border:1.5px solid #d1d5db;border-radius:12px;font-size:15px;background:#fff}
+textarea{min-height:80px;resize:vertical}
+.emojis{display:flex;gap:6px;flex-wrap:wrap}
+.em{width:42px;height:42px;border-radius:10px;border:1.5px solid #d1d5db;background:#fff;font-size:22px}
+.em.on{border-color:#0e7a3d;background:#d1fae5}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;justify-content:space-around;align-items:flex-end;padding:8px 0 14px;box-shadow:0 -2px 10px rgba(0,0,0,.08);z-index:20}
+.bottom button{border:none;background:none;font-size:11px;font-weight:700;color:#6b7280;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bottom button .i{font-size:20px}
+.fab{width:58px;height:58px;border-radius:50%;background:#0e7a3d;color:#fff!important;font-size:30px!important;transform:translateY(-16px);box-shadow:0 6px 16px rgba(14,122,61,.45)}
+.note{font-size:12px;color:#6b7280;margin-top:10px;text-align:center}
+#toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:50}
+#toast.show{opacity:1}
+h2{font-size:18px;margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Mada<span>Market</span></div>
+  <div class="tag">Acheter &amp; vendre partout à Madagasikara 🇲🇬</div>
+  <input id="search" type="search" placeholder="Rechercher un article, une ville…">
+</header>
+
+<div id="cats"></div>
+
+<main>
+  <section id="page-home"><div id="ads"></div></section>
+
+  <section id="page-detail" hidden>
+    <button class="back" onclick="show('page-home')">← Retour</button>
+    <div id="d-thumb" class="thumb big">📦</div>
+    <h2 id="d-title" style="margin:12px 0 4px"></h2>
+    <div class="price" id="d-price" style="font-size:19px"></div>
+    <div class="meta" id="d-meta" style="margin-bottom:10px"></div>
+    <p id="d-desc" style="font-size:14px;line-height:1.5;color:#374151"></p>
+    <div class="btnrow">
+      <a id="d-call" class="btn green" href="tel:">📞 Appeler</a>
+      <a id="d-wa" class="btn line" target="_blank" href="#">💬 WhatsApp</a>
+    </div>
+    <p class="note">Démo : numéro du vendeur fictif pour l'instant.</p>
+  </section>
+
+  <section id="page-sell" hidden>
+    <button class="back" onclick="show('page-home')">← Annuler</button>
+    <h2>Publier une annonce</h2>
+    <form id="sell-form" onsubmit="submitAd(event)">
+      <label>Choisis une icône</label>
+      <div class="emojis" id="emoji-pick"></div>
+      <input type="hidden" name="emoji" value="📦">
+      <label>Titre *</label>
+      <input name="title" required maxlength="70" placeholder="Ex : Samsung A54, comme neuf">
+      <label>Prix en Ariary *</label>
+      <input name="price" type="number" required min="100" placeholder="Ex : 450000">
+      <label>Catégorie</label>
+      <select name="cat">
+        <option>Téléphones</option><option>Informatique</option><option>Véhicules</option>
+        <option>Immobilier</option><option>Maison</option><option>Mode</option>
+        <option>Emploi</option><option>Divers</option>
+      </select>
+      <label>Ville</label>
+      <select name="city">
+        <option>Antananarivo</option><option>Antsirabe</option><option>Toamasina</option>
+        <option>Mahajanga</option><option>Fianarantsoa</option><option>Toliara</option>
+        <option>Antsiranana</option><option>Nosy Be</option><option>Autre ville</option>
+      </select>
+      <label>Description</label>
+      <textarea name="desc" maxlength="500" placeholder="État, accessoires, livraison…"></textarea>
+      <div style="margin-top:16px"><button class="btn green" type="submit">Publier mon annonce</button></div>
+    </form>
+  </section>
+
+  <section id="page-mine" hidden>
+    <h2>Mes annonces</h2>
+    <div id="mine-list" style="margin-top:12px"></div>
+  </section>
+</main>
+
+<nav class="bottom">
+  <button onclick="show('page-home')"><span class="i">🏠</span>Accueil</button>
+  <button class="fab" onclick="show('page-sell')">＋</button>
+  <button onclick="showMine()"><span class="i">📋</span>Mes annonces</button>
+</nav>
+
+<div id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const CATS=["Téléphones","Informatique","Véhicules","Immobilier","Maison","Mode","Emploi","Divers"];
+const DEMO=[
+{id:1,title:"iPhone 11 128 Go — très bon état",price:1450000,cat:"Téléphones",city:"Antananarivo",desc:"Batterie 87 %, aucune rayure, avec chargeur d'origine. Livraison possible dans Tana.",emoji:"📱"},
+{id:2,title:"Ordinateur portable HP i5 8Go RAM",price:2350000,cat:"Informatique",city:"Antananarivo",desc:"Core i5 8e génération, SSD 256 Go. Parfait pour les études et le travail.",emoji:"💻"},
+{id:3,title:"Moto SYM 125 — entretien à jour",price:6800000,cat:"Véhicules",city:"Antsirabe",desc:"9 800 km, papiers en règle, pneus neufs.",emoji:"🏍️"},
+{id:4,title:"Terrain 400 m² à Ambohidratrimo",price:19000000,cat:"Immobilier",city:"Antananarivo",desc:"Titre disponible, bords bitumés, à 5 min de la RN4.",emoji:"🏠"},
+{id:5,title:"Canapé 3 places tissu gris",price:850000,cat:"Maison",city:"Toamasina",desc:"Acheté l'année dernière, très propre. À récupérer sur place.",emoji:"🛋️"},
+{id:6,title:"Lamba oany fait main",price:120000,cat:"Mode",city:"Fianarantsoa",desc:"Plusieurs tailles et couleurs disponibles.",emoji:"👗"},
+{id:7,title:"Poussins — 50 unités vaccinés",price:150000,cat:"Divers",city:"Mahajanga",desc:"Élevage de qualité, idéal pour démarrer un élevage.",emoji:"🐂"},
+{id:8,title:"Riz makalioka — sac de 50 kg",price:210000,cat:"Divers",city:"Marovoay",desc:"Récolte récente, qualité supérieure, livraison à discuter.",emoji:"🌾"}
+];
+let mine=JSON.parse(localStorage.getItem("mm_ads")||"[]");
+let favs=new Set(JSON.parse(localStorage.getItem("mm_favs")||"[]"));
+let ads=[...mine,...DEMO];
+let currentCat="Tout",query="";
+
+function saveMine(){localStorage.setItem("mm_ads",JSON.stringify(mine));}
+function saveFavs(){localStorage.setItem("mm_favs",JSON.stringify([...favs]));}
+function fmt(n){return new Intl.NumberFormat("fr-FR").format(n)+" Ar";}
+function grad(a){return "g"+(a.id%5);}
+function esc(s){return String(s).replace(/</g,"&lt;");}
+function show(id){document.querySelectorAll("main section").forEach(s=>s.hidden=(s.id!==id));window.scrollTo(0,0);}
+function showMine(){renderMine();show("page-mine");}
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200);}
+
+function card(a){
+return `<div class="card" onclick="openDetail(${a.id})">
+<div class="thumb ${grad(a)}">${a.emoji}</div>
+<div class="info"><div class="title">${esc(a.title)}</div>
+<div class="price">${fmt(a.price)}</div>
+<div class="meta">📍 ${esc(a.city)} · ${a.cat}</div></div>
+<button class="heart ${favs.has(a.id)?"on":""}" onclick="event.stopPropagation();toggleFav(${a.id})">♥</button></div>`;
+}
+
+function render(){
+const list=ads.filter(a=>(currentCat==="Tout"||a.cat===currentCat)&&(a.title+" "+a.desc+" "+a.city).toLowerCase().includes(query));
+ $("#ads").innerHTML=list.length?list.map(card).join(""):`<p class="empty">Aucune annonce trouvée 🙏<br>Essaie une autre recherche ou une autre catégorie.</p>`;
+}
+
+function toggleFav(id){favs.has(id)?favs.delete(id):favs.add(id);saveFavs();if(!$("#page-home").hidden)render();}
+
+function openDetail(id){
+const a=ads.find(x=>x.id===id);if(!a)return;
+ $("#d-thumb").className="thumb big "+grad(a);
+ $("#d-thumb").textContent=a.emoji;
+ $("#d-title").textContent=a.title;
+ $("#d-price").textContent=fmt(a.price);
+ $("#d-meta").textContent="📍 "+a.city+" · "+a.cat+(a.date?" · publié le "+a.date:"");
+ $("#d-desc").textContent=a.desc||"";
+ $("#d-call").href="tel:+261340000000";
+ $("#d-wa").href="https://wa.me/261340000000?text="+encodeURIComponent("Bonjour ! Je suis intéressé par votre annonce : "+a.title);
+show("page-detail");
+}
+
+function renderMine(){
+ $("#mine-list").innerHTML=mine.length?mine.map(a=>`<div class="card"><div class="thumb ${grad(a)}">${a.emoji}</div><div class="info"><div class="title">${esc(a.title)}</div><div class="price">${fmt(a.price)}</div><div class="meta">📍 ${esc(a.city)} · ${a.cat}</div></div><button class="heart" style="position:static;font-size:22px" onclick="delAd(${a.id})">🗑️</button></div>`).join(""):`<p class="empty">Tu n'as pas encore publié d'annonce.<br>Appuie sur le gros bouton ＋ pour vendre ton premier article !</p>`;
+}
+
+function delAd(id){mine=mine.filter(a=>a.id!==id);ads=[...mine,...DEMO];saveMine();renderMine();render();toast("Annonce supprimée");}
+
+function submitAd(e){
+e.preventDefault();
+const f=e.target;
+mine.unshift({id:Date.now(),title:f.title.value.trim(),price:+f.price.value,cat:f.cat.value,city:f.city.value,desc:f.desc.value.trim(),emoji:f.emoji.value,date:new Date().toLocaleDateString("fr-FR"),mine:true});
+ads=[...mine,...DEMO];
+saveMine();f.reset();
+document.querySelectorAll(".em").forEach(x=>x.classList.toggle("on",x.textContent==="📦"));
+show("page-home");render();toast("✅ Annonce publiée !");
+}
+
+["Tout",...CATS].forEach(c=>{
+const b=document.createElement("button");
+b.className="chip"+(c==="Tout"?" on":"");
+b.textContent=c;
+b.onclick=()=>{currentCat=c;document.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));b.classList.add("on");render();};
+ $("#cats").appendChild(b);
+});
+
+const form=$("#sell-form");
+["📱","💻","🚗","🏍️","🏠","🛋️","👗","🐂","🌾","📦"].forEach(em=>{
+const b=document.createElement("button");
+b.type="button";b.className="em"+(em==="📦"?" on":"");b.textContent=em;
+b.onclick=()=>{form.emoji.value=em;document.querySelectorAll(".em").forEach(x=>x.classList.remove("on"));b.classList.add("on");};
+ $("#emoji-pick").appendChild(b);
+});
+
+ $("#search").addEventListener("input",e=>{query=e.target.value.toLowerCase();render();});
+render();
+if("serviceWorker" in navigator){try{navigator.serviceWorker.register("/sw.js");}catch(e){}}
+</script>
+</body>
+</html>
