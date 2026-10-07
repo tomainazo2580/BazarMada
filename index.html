@@ -54,6 +54,12 @@ textarea{min-height:80px;resize:vertical}
 #toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:50}
 #toast.show{opacity:1}
 h2{font-size:18px;margin-bottom:4px}
+#install{position:fixed;left:12px;right:12px;bottom:92px;background:#0e7a3d;color:#fff;border-radius:16px;padding:14px;display:none;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.25);align-items:center;gap:10px}
+#install .txt{flex:1;font-size:13px;line-height:1.35}
+#install .txt b{font-size:14px;display:block;margin-bottom:2px}
+#install button{border:none;border-radius:10px;padding:9px 13px;font-weight:800;font-size:13px}
+#install .go{background:#fff;color:#0e7a3d}
+#install .no{background:none;color:#a7f3d0}
 </style>
 </head>
 <body>
@@ -129,6 +135,7 @@ h2{font-size:18px;margin-bottom:4px}
 </nav>
 
 <div id="toast"></div>
+<div id="install"><div class="txt"><b>📲 Installer BazarMada</b>Plein écran, plus rapide, comme une vraie app</div><button class="go">Installer</button><button class="no">✕</button></div>
 
 <script>
 /* ====== CONFIGURATION ====== */
@@ -284,23 +291,18 @@ await syncPending();
 await loadAds();
 })();
 
-if("serviceWorker" in navigator){try{navigator.serviceWorker.register("/sw.js");}catch(e){}}
-</script>/* ===== 📲 Bannière "Installer l'app" ===== */
+/* ===== 📲 Bannière "Installer l'app" ===== */
 (function(){
 if(window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone)return;
 let deferred=null;
-const st=document.createElement("style");
-st.textContent="#install{position:fixed;left:12px;right:12px;bottom:92px;background:#0e7a3d;color:#fff;border-radius:16px;padding:14px;display:none;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.25);align-items:center;gap:10px}#install .txt{flex:1;font-size:13px;line-height:1.35}#install .txt b{font-size:14px;display:block;margin-bottom:2px}#install button{border:none;border-radius:10px;padding:9px 13px;font-weight:800;font-size:13px}#install .go{background:#fff;color:#0e7a3d}#install .no{background:none;color:#a7f3d0}";
-document.head.appendChild(st);
-const bar=document.createElement("div");
-bar.id="install";
-bar.innerHTML='<div class="txt"><b>📲 Installer BazarMada</b>Plein écran, plus rapide, comme une vraie app</div><button class="go">Installer</button><button class="no">✕</button>';
-document.body.appendChild(bar);
-const go=bar.querySelector(".go"),no=bar.querySelector(".no");
+const bar=document.getElementById("install"),go=bar.querySelector(".go"),no=bar.querySelector(".no");
 go.onclick=async()=>{bar.style.display="none";if(!deferred)return;deferred.prompt();const c=await deferred.userChoice;deferred=null;if(c.outcome==="accepted")toast("🎉 Installation en cours…");};
 no.onclick=()=>{bar.style.display="none";sessionStorage.setItem("mm_no_install","1");};
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;if(!sessionStorage.getItem("mm_no_install"))setTimeout(()=>bar.style.display="flex",2500);});
 window.addEventListener("appinstalled",()=>{bar.style.display="none";toast("✅ BazarMada installée !");});
 })();
+
+if("serviceWorker" in navigator){try{navigator.serviceWorker.register("/sw.js");}catch(e){}}
+</script>
 </body>
 </html>
