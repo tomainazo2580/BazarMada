@@ -20,6 +20,17 @@ header{background:linear-gradient(135deg,#0e7a3d,#065f46);color:#fff;padding:14p
 .tag{font-size:12px;opacity:.85;margin:4px 0 10px}
 #search{width:100%;padding:11px 14px;border:none;border-radius:12px;font-size:15px;outline:none}
 #status{background:#fef3c7;color:#92400e;font-size:13px;padding:8px 12px;text-align:center}
+#hero{margin:10px 12px 0}
+.hero{position:relative;display:block;border-radius:16px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.2);color:#fff;text-decoration:none;background:#0f172a}
+.hero img.hbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5}
+.hero .hin{position:relative;padding:16px 14px 12px}
+.hbadge{display:inline-block;background:#b45309;color:#fde68a;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:4px 10px;border-radius:999px;margin-bottom:8px}
+.hadv{font-size:11px;opacity:.95;margin-bottom:4px;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.hadv b{font-weight:800}
+.htitle{font-size:18px;font-weight:800;line-height:1.25;margin-bottom:6px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.hdesc{font-size:13px;opacity:.95;line-height:1.45;margin-bottom:12px;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.hcta{display:inline-block;background:#f59e0b;color:#111;font-weight:800;font-size:14px;padding:10px 18px;border-radius:12px}
+.hreg{display:block;margin:6px 4px 0;font-size:11px;color:#6b7280;text-decoration:underline;text-align:right}
 #cats{display:flex;gap:8px;overflow-x:auto;padding:10px 12px;background:#f3f4f6;scrollbar-width:none}
 #cats::-webkit-scrollbar{display:none}
 .chip{flex:0 0 auto;padding:7px 14px;border-radius:999px;border:1px solid #d1d5db;background:#fff;font-size:13px;font-weight:600;color:#374151}
@@ -42,7 +53,7 @@ main{padding:12px 12px 110px}
 .g3{background:linear-gradient(135deg,#ef4444,#7f1d1d)}
 .g4{background:linear-gradient(135deg,#8b5cf6,#4c1d95)}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.grid>.bgrid,.grid>.footer,.grid>.empty{grid-column:1/-1}
+.grid>.footer,.grid>.empty{grid-column:1/-1}
 .grid .skelcard{grid-column:1/-1}
 .gcard{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.07);position:relative;transition:transform .08s}
 .gcard:active{transform:scale(.98)}
@@ -85,10 +96,16 @@ h2{font-size:18px;margin-bottom:4px}
 .footer{margin-top:24px;text-align:center;padding:16px 0 4px;color:#9ca3af;font-size:13px}
 .footer button{border:none;background:none;color:#6b7280;font-weight:600;font-size:13px;padding:0 4px}
 .copy{margin-top:8px;font-size:12px;color:#c4c8cf}
-.bgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 10px}
-.btag{grid-column:1/-1;font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;text-align:right;margin-bottom:-6px}
-.bcard{display:block;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.07);height:72px}
-.bcard img{width:100%;height:100%;object-fit:cover;display:block}
+.scard{display:block;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 0 0 2px #f59e0b inset,0 1px 3px rgba(0,0,0,.07);position:relative;text-decoration:none;color:#111}
+.scbadge{position:absolute;top:8px;left:8px;background:#f59e0b;color:#111;font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.scard .sgimg{width:100%;aspect-ratio:16/10;object-fit:cover;display:block}
+.sbody{padding:10px 12px 12px}
+.sadv{color:#b45309;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.stitle{font-weight:800;font-size:14px;margin:2px 0 4px;line-height:1.3}
+.sdesc{font-size:12px;color:#4b5563;line-height:1.4;margin-bottom:8px}
+.sfoot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sspace{font-size:11px;color:#9ca3af}
+.sbtn{background:#f59e0b;color:#111;font-weight:800;font-size:12px;padding:8px 12px;border-radius:10px;display:inline-block}
 #install{position:fixed;left:12px;right:12px;bottom:92px;background:#0e7a3d;color:#fff;border-radius:16px;padding:14px;display:none;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.25);align-items:center;gap:10px}
 #install .txt{flex:1;font-size:13px;line-height:1.35}
 #install .txt b{font-size:14px;display:block;margin-bottom:2px}
@@ -130,6 +147,7 @@ h2{font-size:18px;margin-bottom:4px}
 </header>
 
 <div id="status" hidden></div>
+<div id="hero" hidden></div>
 <div id="cats"></div>
 
 <main>
@@ -280,7 +298,8 @@ const DEMO=[
 
 let publicAds=[],mine=JSON.parse(localStorage.getItem("mm_ads")||"[]"),myServer=[];
 let favs=new Set(JSON.parse(localStorage.getItem("mm_favs")||"[]"));
-let ads=[],currentCat="Tout",query="",online=false,fresh=[],photoFile=null,currentAd=null,banners=[];
+let ads=[],currentCat="Tout",query="",online=false,fresh=[],photoFile=null,currentAd=null;
+let heroes=[],cards=[],currentHero=null,cardIdx=0;
 let view=localStorage.getItem("mm_view")||"grid";
 let authMode="signup";
 
@@ -349,7 +368,12 @@ function fmt(n){return new Intl.NumberFormat("fr-FR").format(n)+" Ar";}
 function grad(a){return "g"+(a.id%5);}
 function esc(s){return String(s).replace(/</g,"&lt;").replace(/"/g,"&quot;");}
 function badge(c){const x=CATC[c]||CATC["Divers"];return '<span class="cbadge" style="background:'+x[0]+';color:'+x[1]+'">'+esc(c)+'</span>';}
-function show(id){document.querySelectorAll("main section").forEach(s=>s.hidden=(s.id!==id));window.scrollTo(0,0);}
+function show(id){
+document.querySelectorAll("main section").forEach(s=>s.hidden=(s.id!==id));
+const h=$("#hero");
+if(id==="page-home"&&currentHero){h.hidden=false;}else{h.hidden=true;}
+window.scrollTo(0,0);
+}
 function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
 function waNum(p){p=String(p).replace(/\D/g,"");if(p.indexOf("0")===0)p="261"+p.slice(1);else if(p.indexOf("261")!==0)p="261"+p;return p;}
 function fmtPhone(p){p=String(p).replace(/\D/g,"");if(p.length===12&&p.indexOf("261")===0)p="0"+p.slice(3);return p.replace(/(\d{3})(\d{2})(\d{3})(\d{2})/,"$1 $2 $3 $4");}
@@ -380,13 +404,33 @@ return '<div class="gcard" onclick="openDetail('+a.id+')">'+gthumbHTML(a)+
 '<button class="heart '+(favs.has(a.id)?"on":"")+'" onclick="event.stopPropagation();toggleFav('+a.id+')">♥</button></div>';
 }
 
-/* ===== 📣 Bannières ===== */
-function bannerCard(b){
-const img='<img src="'+esc(b.image_url)+'" alt="Publicité" loading="lazy">';
-return b.link_url?'<a class="bcard" href="'+esc(b.link_url)+'" target="_blank" rel="noopener">'+img+'</a>':'<div class="bcard">'+img+'</div>';
+/* ===== 📣 Publicités : Hero + Cartes sponsorisées ===== */
+function renderHero(){
+const el=$("#hero");
+if(!currentHero){el.hidden=true;el.innerHTML="";return;}
+const b=currentHero;
+const img='<img class="hbg" src="'+esc(b.image_url)+'" alt="" loading="lazy">';
+const body='<div class="hin">'+
+'<span class="hbadge">✨ Partenaire officiel</span>'+
+'<div class="hadv">Annonceur : <b>'+esc(b.advertiser||"Partenaire")+'</b></div>'+
+(b.title?'<div class="htitle">'+esc(b.title)+'</div>':"")+
+(b.description?'<div class="hdesc">'+esc(b.description)+'</div>':"")+
+'<span class="hcta">'+(b.link_url?"Découvrir les offres ↗":"En savoir plus")+'</span>'+
+'</div>';
+const box=(b.link_url?'<a class="hero" href="'+esc(b.link_url)+'" target="_blank" rel="noopener">':'<div class="hero">')+img+body+(b.link_url?'</a>':'</div>');
+el.innerHTML=box+'<a class="hreg" onclick="openInfo(\'contact\')">📣 Votre pub ici ? Contactez notre régie</a>';
+el.hidden=false;
 }
-function bGrid(pair){
-return '<div class="bgrid"><div class="btag">Publicité</div>'+pair.map(bannerCard).join("")+'</div>';
+
+function sCard(b){
+const img='<img class="sgimg" src="'+esc(b.image_url)+'" alt="" loading="lazy">';
+const body='<div class="sbody">'+
+'<div class="sadv">'+esc(b.advertiser||"Partenaire")+'</div>'+
+(b.title?'<div class="stitle">'+esc(b.title)+'</div>':"")+
+(b.description?'<div class="sdesc">'+esc(b.description)+'</div>':"")+
+'<div class="sfoot"><span class="sspace">Espace partenaire</span>'+(b.link_url?'<span class="sbtn">Découvrir ↗</span>':"")+'</div></div>';
+const inner='<span class="scbadge">📢 Sponsorisé</span>'+img+body;
+return b.link_url?'<a class="scard" href="'+esc(b.link_url)+'" target="_blank" rel="noopener">'+inner+'</a>':'<div class="scard">'+inner+'</div>';
 }
 
 function setView(v){
@@ -401,18 +445,17 @@ const list=ads.filter(function(a){return (currentCat==="Tout"||a.cat===currentCa
 const wrap=$("#ads");
 wrap.className=(view==="grid")?"grid":"";
 let html="";
-if(banners.length&&!list.length){html+=bGrid([banners[0],banners[1]||banners[0]]);}
-let n=0,bi=0;
+let n=0;
 for(let i=0;i<list.length;i++){
 html+=(view==="grid")?gcard(list[i]):card(list[i]);
 n++;
-if(!query&&currentCat==="Tout"&&banners.length&&n%6===0){
-html+=bGrid([banners[bi%banners.length],banners[(bi+1)%banners.length]]);
-bi+=2;
+if(!query&&currentCat==="Tout"&&cards.length&&n%6===0){
+html+=sCard(cards[cardIdx%cards.length]);
+cardIdx++;
 }
 }
 if(!list.length){
-html+='<div class="empty"><div class="eicon">🔍</div>Aucune annonce trouvée 🙏<br>Essaie une autre recherche — ou publie la première !</div>';
+html='<div class="empty"><div class="eicon">🔍</div>Aucune annonce trouvée 🙏<br>Essaie une autre recherche — ou publie la première !</div>';
 }else{
 html+='<footer class="footer"><button onclick="openInfo(\'about\')">À propos</button> · <button onclick="openInfo(\'contact\')">Contact</button> · <button onclick="openInfo(\'secu\')">Sécurité</button><div class="copy">BazarMada © 2025 — Fait avec ❤️ à Madagascar</div></footer>';
 }
@@ -581,8 +624,14 @@ fresh=[];
 ads=[...publicAds,...mine];
 try{
 const rb=await fetch(SB_URL+"/rest/v1/banners?select=*&active=eq.true&order=created_at.desc",{headers:{apikey:SB_KEY}});
-if(rb.ok)banners=await rb.json();
-}catch(e){banners=[];}
+if(rb.ok){
+const all=await rb.json();
+heroes=all.filter(function(b){return b.type!=="card";});
+cards=all.filter(function(b){return b.type==="card";});
+}else{heroes=[];cards=[];}
+}catch(e){heroes=[];cards=[];}
+currentHero=heroes.length?heroes[Math.floor(Math.random()*heroes.length)]:null;
+renderHero();
 renderStatus();render();
 }
 
