@@ -93,6 +93,7 @@ try{S=JSON.parse(sessionStorage.getItem("bm_admin")||"null")}catch(e){S=null}
 /* Affichage visible de TOUTES les erreurs */
 function showErr(txt){
 const b=document.getElementById("errbar");
+if(!txt){b.style.display="none";b.textContent="";return;}
 b.textContent="⚠️ "+txt;
 b.style.display="block";
 }
