@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BazarMada — Admin</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif}
+body{background:#111827;color:#e5e7eb;min-height:100vh}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:20px;color:#fff}
+h1 span{color:#34d399}
+.sub{font-size:13px;color:#9ca3af;margin:4px 0 20px}
+.card{background:#1f2937;border-radius:14px;padding:16px;margin-bottom:14px}
+label{display:block;font-size:13px;font-weight:700;color:#9ca3af;margin:12px 0 5px}
+input{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font-size:15px;background:#111827;color:#fff}
+.btn{display:block;width:100%;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer}
+.btn.green{background:#0e7a3d;color:#fff}
+.btn.gray{background:#374151;color:#e5e7eb}
+.btn.red{background:#7f1d1d;color:#fecaca}
+.btn.sm{display:inline-block;width:auto;padding:7px 12px;font-size:12px;border-radius:8px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:#1f2937;border-radius:12px;padding:14px;text-align:center}
+.stat b{display:block;font-size:24px;color:#34d399}
+.stat span{font-size:12px;color:#9ca3af}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{flex:1;padding:10px;border:none;border-radius:10px;background:#1f2937;color:#9ca3af;font-weight:700;font-size:13px;cursor:pointer}
+.tab.on{background:#0e7a3d;color:#fff}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.badge{padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.b-active{background:#064e3b;color:#6ee7b7}
+.b-hidden{background:#7f1d1d;color:#fecaca}
+.b-block{background:#7f1d1d;color:#fecaca}
+.b-ok{background:#1e3a5f;color:#93c5fd}
+.b-admin{background:#4c1d95;color:#c4b5fd}
+.t{font-weight:700;font-size:14px;color:#fff}
+.m{font-size:12px;color:#9ca3af}
+.grow{flex:1;min-width:150px}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#0e7a3d;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:.3s;pointer-events:none}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="login">
+  <h1>🎛️ Bazar<span>Mada</span> — Admin</h1>
+  <p class="sub">Accès réservé à l'administrateur</p>
+  <div class="card">
+    <label>Numéro de téléphone</label>
+    <input id="l-phone" type="tel" placeholder="034 12 345 67">
+    <label>Mot de passe</label>
+    <input id="l-pass" type="password" placeholder="••••••">
+    <div style="margin-top:16px"><button class="btn green" onclick="adminLogin()">Se connecter</button></div>
+  </div>
+</div>
+
+<div id="panel" hidden>
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <h1>🎛️ Bazar<span>Mada</span> — Admin</h1>
+      <p class="sub" id="who"></p>
+    </div>
+    <button class="btn sm gray" onclick="adminLogout()">Déconnexion</button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tabs">
+    <button class="tab on" id="tab-ads" onclick="showTab('ads')">📢 Annonces</button>
+    <button class="tab" id="tab-sellers" onclick="showTab('sellers')">👥 Vendeurs</button>
+  </div>
+
+  <div id="ads-list"></div>
+  <div id="sellers-list" hidden></div>
+</div>
+
+</div>
+<div id="toast"></div>
+<script>
+const SB_URL="https://wisourxbnsnmsfgrskhv.supabase.co";
+const SB_KEY="sb_publishable_0mt79uNrwTZCeU1BxPQwaw_5NWpPo_V";
+let S=null;
+try{S=JSON.parse(sessionStorage.getItem("bm_admin")||"null")}catch(e){S=null}
+
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
+function fmt(n){return new Intl.NumberFormat("fr-FR").format(n)+" Ar";}
+function normPhone(p){p=String(p).replace(/\D/g,"");if(p.length===12&&p.indexOf("261")===0)p="0"+p.slice(3);return p;}
+function esc(s){return String(s==null?"":s).replace(/</g,"&lt;").replace(/"/g,"&quot;");}
+
+async function rpc(name,args){
+const r=await fetch(SB_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(args)});
+const d=await r.json().catch(()=>({}));
+if(!r.ok)throw new Error(d.message||("HTTP "+r.status));
+return d;
+}
+
+async function adminLogin(){
+const phone=normPhone(document.getElementById("l-phone").value);
+const pass=document.getElementById("l-pass").value;
+if(!phone||!pass){toast("Remplis numéro et mot de passe");return;}
+try{
+const d=await rpc("login_seller",{p_phone:phone,p_pass:pass});
+if(!d.is_admin){toast("⛔ Accès réservé — ce compte n'est pas admin");return;}
+S=d;sessionStorage.setItem("bm_admin",JSON.stringify(d));
+openPanel();
+}catch(e){toast("❌ "+(e.message||"Connexion impossible"));}
+}
+
+function adminLogout(){S=null;sessionStorage.removeItem("bm_admin");document.getElementById("panel").hidden=true;document.getElementById("login").hidden=false;}
+
+function openPanel(){
+document.getElementById("login").hidden=true;
+document.getElementById("panel").hidden=false;
+document.getElementById("who").textContent="Connecté : "+(S.name||S.phone);
+refreshAll();
+}
+
+async function refreshAll(){
+try{
+const st=await rpc("admin_stats",{p_token:S.token});
+document.getElementById("stats").innerHTML=
+'<div class="stat"><b>'+st.ads_total+'</b><span>Annonces</span></div>'+
+'<div class="stat"><b>'+st.ads_active+'</b><span>Actives</span></div>'+
+'<div class="stat"><b>'+st.ads_today+'</b><span>Aujourd\'hui</span></div>'+
+'<div class="stat"><b>'+st.sellers_total+'</b><span>Vendeurs</span></div>'+
+'<div class="stat"><b>'+st.sellers_blocked+'</b><span>Bloqués</span></div>';
+}catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+await loadAds();
+await loadSellers();
+}
+
+function showTab(t){
+document.getElementById("tab-ads").className="tab"+(t==="ads"?" on":"");
+document.getElementById("tab-sellers").className="tab"+(t==="sellers"?" on":"");
+document.getElementById("ads-list").hidden=(t!=="ads");
+document.getElementById("sellers-list").hidden=(t!=="sellers");
+}
+
+async function loadAds(){
+try{
+const list=await rpc("admin_list_ads",{p_token:S.token,p_limit:100});
+document.getElementById("ads-list").innerHTML=(list&&list.length?list.map(a=>
+'<div class="card"><div class="row">'+
+'<div class="grow"><div class="t">'+esc(a.title)+'</div>'+
+'<div class="m">'+fmt(a.price)+' · 📍 '+esc(a.city)+' · '+esc(a.cat)+'</div>'+
+'<div class="m">☎️ '+esc(a.phone)+' · '+(a.created_at?new Date(a.created_at).toLocaleDateString("fr-FR"):"")+'</div></div>'+
+'<span class="badge '+(a.status==="active"?"b-active":"b-hidden")+'">'+(a.status==="active"?"visible":"masquée")+'</span>'+
+'<button class="btn sm gray" onclick="toggleAd('+a.id+',\''+(a.status==="active"?"hidden":"active")+'\')">'+(a.status==="active"?"Masquer":"Afficher")+'</button>'+
+'<button class="btn sm red" onclick="removeAd('+a.id+')">Supprimer</button>'+
+'</div></div>'
+).join("")):'<p class="sub">Aucune annonce.</p>';
+}catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+}
+
+async function toggleAd(id,st){
+try{await rpc("admin_set_ad_status",{p_token:S.token,p_ad_id:id,p_status:st});toast("✅ Fait");await refreshAll();}
+catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+}
+
+async function removeAd(id){
+if(!confirm("Supprimer définitivement cette annonce ?"))return;
+try{await rpc("admin_delete_ad",{p_token:S.token,p_ad_id:id});toast("🗑️ Supprimée");await refreshAll();}
+catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+}
+
+async function loadSellers(){
+try{
+const list=await rpc("admin_list_sellers",{p_token:S.token});
+document.getElementById("sellers-list").innerHTML=(list&&list.length?list.map(v=>
+'<div class="card"><div class="row">'+
+'<div class="grow"><div class="t">'+esc(v.name||"Vendeur")+'</div>'+
+'<div class="m">☎️ '+esc(v.phone)+' · '+v.ads_count+' annonce(s)</div>'+
+'<div class="m">Inscrit le '+(v.created_at?new Date(v.created_at).toLocaleDateString("fr-FR"):"?")+'</div></div>'+
+(v.is_admin?'<span class="badge b-admin">👑 admin</span>':'')+
+'<span class="badge '+(v.blocked?"b-block":"b-ok")+'">'+(v.blocked?"bloqué":"actif")+'</span>'+
+(v.id===S.seller_id?'':'<button class="btn sm '+(v.blocked?"green":"gray")+'" onclick="toggleBlock(\''+v.id+'\')">'+(v.blocked?"Débloquer":"Bloquer")+'</button>')+
+'</div></div>'
+).join("")):'<p class="sub">Aucun vendeur.</p>';
+}catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+}
+
+async function toggleBlock(id){
+try{await rpc("admin_toggle_block",{p_token:S.token,p_seller_id:id});toast("✅ Fait");await refreshAll();}
+catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+}
+
+if(S)openPanel();
+</script>
+</body>
+</html>
