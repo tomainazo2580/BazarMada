@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BazarMada — Admin v4</title>
+<title>BazarMada — Admin v5</title>
 <script>
 window.addEventListener("error",function(e){var b=document.getElementById("errbar");if(b){b.textContent="⚠️ Erreur page : "+(e.message||"inconnue")+" (ligne "+e.lineno+")";b.style.display="block";}});
 window.addEventListener("unhandledrejection",function(e){var r=e.reason;var b=document.getElementById("errbar");if(b){b.textContent="⚠️ Erreur : "+((r&&r.message)?r.message:r);b.style.display="block";}});
@@ -18,12 +18,15 @@ h1 span{color:#34d399}
 .sub{font-size:13px;color:#9ca3af;margin:4px 0 20px}
 .card{background:#1f2937;border-radius:14px;padding:16px;margin-bottom:14px}
 label{display:block;font-size:13px;font-weight:700;color:#9ca3af;margin:12px 0 5px}
-input{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font-size:15px;background:#111827;color:#fff}
+input,textarea{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font-size:15px;background:#111827;color:#fff}
+textarea{min-height:64px;resize:vertical}
 .btn{display:block;width:100%;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer}
 .btn.green{background:#0e7a3d;color:#fff}
 .btn.gray{background:#374151;color:#e5e7eb}
 .btn.red{background:#7f1d1d;color:#fecaca}
 .btn.sm{display:inline-block;width:auto;padding:7px 12px;font-size:12px;border-radius:8px}
+.typebtn{flex:1;padding:10px;border:2px solid #374151;border-radius:10px;background:#111827;color:#9ca3af;font-weight:800;font-size:13px;cursor:pointer}
+.typebtn.on{border-color:#f59e0b;color:#fbbf24;background:#292524}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
 .stat{background:#1f2937;border-radius:12px;padding:14px;text-align:center}
 .stat b{display:block;font-size:24px;color:#34d399}
@@ -38,6 +41,8 @@ input{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font
 .b-block{background:#7f1d1d;color:#fecaca}
 .b-ok{background:#1e3a5f;color:#93c5fd}
 .b-admin{background:#4c1d95;color:#c4b5fd}
+.b-hero{background:#78350f;color:#fcd34d}
+.b-card{background:#1e3a5f;color:#93c5fd}
 .t{font-weight:700;font-size:14px;color:#fff}
 .m{font-size:12px;color:#9ca3af}
 .grow{flex:1;min-width:150px}
@@ -57,7 +62,7 @@ input{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font
 
 <div id="login">
   <h1>🎛️ Bazar<span>Mada</span> — Admin</h1>
-  <div class="ver">version 4</div>
+  <div class="ver">version 5 — pubs hero &amp; cartes</div>
   <p class="sub">Accès réservé à l'administrateur</p>
   <div class="card">
     <label>Numéro de téléphone</label>
@@ -83,7 +88,7 @@ input{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font
   <div class="tabs">
     <button class="tab on" id="tab-ads" onclick="showTab('ads')">📢 Annonces</button>
     <button class="tab" id="tab-sellers" onclick="showTab('sellers')">👥 Vendeurs</button>
-    <button class="tab" id="tab-banners" onclick="showTab('banners')">📣 Bannières</button>
+    <button class="tab" id="tab-banners" onclick="showTab('banners')">📣 Publicités</button>
   </div>
 
   <div id="ads-list"></div>
@@ -91,11 +96,22 @@ input{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font
 
   <div id="banners-list" hidden>
     <div class="card">
-      <div class="t" style="margin-bottom:4px">➕ Ajouter une bannière</div>
-      <div class="m" style="margin-bottom:8px">Image large (paysage) recommandée. Elle sera affichée 2 par ligne dans l'app.</div>
-      <input id="b-link" type="url" placeholder="Lien (optionnel) — ex : https://wa.me/261343994907">
-      <div style="display:flex;gap:10px;margin-top:10px">
-        <button class="btn green" style="flex:1" onclick="document.getElementById('b-img').click()">🖼️ Choisir l'image</button>
+      <div class="t" style="margin-bottom:4px">➕ Nouvelle publicité</div>
+      <div class="row" style="margin:10px 0">
+        <button class="typebtn on" id="tb-hero" onclick="setBType('hero')">🏆 HERO (grand bandeau en haut)</button>
+        <button class="typebtn" id="tb-card" onclick="setBType('card')">📢 CARTE (dans la grille)</button>
+      </div>
+      <div class="m" id="b-type-help" style="margin-bottom:6px">Grand bandeau pleine largeur affiché au-dessus des annonces. Rotation automatique entre vos annonceurs.</div>
+      <label>Nom de l'annonceur *</label>
+      <input id="b-adv" maxlength="40" placeholder="Ex : Telma Madagascar">
+      <label>Titre</label>
+      <input id="b-title" maxlength="60" placeholder="Ex : Fibre & 4G+ : Vitesse Max">
+      <label>Description</label>
+      <textarea id="b-desc" maxlength="160" placeholder="Ex : Installez la fibre dans vos bureaux..."></textarea>
+      <label>Lien (bouton « Découvrir »)</label>
+      <input id="b-link" type="url" placeholder="Ex : https://wa.me/261343994907">
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="btn gray" style="flex:1" onclick="document.getElementById('b-img').click()">🖼️ Choisir l'image</button>
         <button class="btn green" style="flex:1" onclick="addBanner()">Ajouter</button>
       </div>
       <input id="b-img" type="file" accept="image/*" hidden>
@@ -109,7 +125,7 @@ input{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font
 <script>
 const SB_URL="https://wisourxbnsnmsfgrskhv.supabase.co";
 const SB_KEY="sb_publishable_0mt79uNrwTZCeU1BxPQwaw_5NWpPo_V";
-let S=null,bFile=null;
+let S=null,bFile=null,bType="hero";
 try{S=JSON.parse(sessionStorage.getItem("bm_admin")||"null")}catch(e){S=null}
 
 function showErr(txt){
@@ -176,11 +192,11 @@ document.getElementById("stats").innerHTML=
 '<div class="stat"><b>'+st.ads_today+'</b><span>Aujourd\'hui</span></div>'+
 '<div class="stat"><b>'+st.sellers_total+'</b><span>Vendeurs</span></div>'+
 '<div class="stat"><b>'+st.sellers_blocked+'</b><span>Bloqués</span></div>'+
-'<div class="stat"><b>'+(st.banners_active!=null?st.banners_active:"?")+'</b><span>Bannières ON</span></div>';
+'<div class="stat"><b>'+(st.banners_active!=null?st.banners_active:"?")+'</b><span>Pubs ON</span></div>';
 }catch(e){status("⚠️ "+(e.message||"Erreur stats"),"err");}
 try{await loadAds();}catch(e){status("⚠️ Annonces : "+(e.message||"erreur"),"err");}
 try{await loadSellers();}catch(e){status("⚠️ Vendeurs : "+(e.message||"erreur"),"err");}
-try{await loadBanners();}catch(e){status("⚠️ Bannières : "+(e.message||"erreur — lance le SQL bannières"),"err");}
+try{await loadBanners();}catch(e){status("⚠️ Publicités : "+(e.message||"erreur"),"err");}
 status("");
 }
 
@@ -251,7 +267,16 @@ try{await rpc("admin_toggle_block",{p_token:S.token,p_seller_id:id});toast("✅ 
 catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
 }
 
-/* ===== 📣 Bannières ===== */
+/* ===== 📣 Publicités ===== */
+function setBType(t){
+bType=t;
+document.getElementById("tb-hero").className="typebtn"+(t==="hero"?" on":"");
+document.getElementById("tb-card").className="typebtn"+(t==="card"?" on":"");
+document.getElementById("b-type-help").textContent=(t==="hero")
+?"Grand bandeau pleine largeur au-dessus des annonces (comme Telma sur ta maquette). Rotation entre annonceurs à chaque actualisation."
+:"Carte qui prend la place d'une annonce dans la grille, tous les 6 articles (comme Orange Money sur ta maquette). Rotation entre annonceurs.";
+}
+
 function shrinkImg(file){
 return new Promise(function(resolve,reject){
 const img=new Image();
@@ -286,13 +311,16 @@ if(bFile){p.src=URL.createObjectURL(bFile);p.hidden=false;}else{p.hidden=true;}
 });
 
 async function addBanner(){
+const adv=document.getElementById("b-adv").value.trim();
 if(!bFile){status("Choisis d'abord une image 🖼️","err");return;}
-status("Envoi de la bannière…","wait");
+if(!adv){status("Le nom de l'annonceur est obligatoire","err");return;}
+status("Envoi de la publicité…","wait");
 try{
 const url=await uplBanner(bFile);
-await rpc("admin_add_banner",{p_token:S.token,p_title:"",p_link:document.getElementById("b-link").value.trim(),p_image:url});
-bFile=null;document.getElementById("b-img").value="";document.getElementById("b-prev").hidden=true;document.getElementById("b-link").value="";
-toast("✅ Bannière ajoutée");await refreshAll();
+await rpc("admin_add_banner",{p_token:S.token,p_type:bType,p_advertiser:adv,p_title:document.getElementById("b-title").value.trim(),p_description:document.getElementById("b-desc").value.trim(),p_link:document.getElementById("b-link").value.trim(),p_image:url});
+bFile=null;document.getElementById("b-img").value="";document.getElementById("b-prev").hidden=true;
+document.getElementById("b-adv").value="";document.getElementById("b-title").value="";document.getElementById("b-desc").value="";document.getElementById("b-link").value="";
+toast("✅ Publicité ajoutée");await refreshAll();
 }catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
 }
 
@@ -302,15 +330,18 @@ let html="";
 if(list&&list.length){
 for(let i=0;i<list.length;i++){
 const b=list[i];
+const isHero=(b.type!=="card");
 html+='<div class="card"><div class="row">'+
 '<img class="bthumb" src="'+esc(b.image_url)+'" alt="">'+
-'<div class="grow"><div class="m">'+esc(b.link_url||"sans lien")+'</div></div>'+
+'<div class="grow"><div class="t">'+esc(b.advertiser||"Annonceur")+'</div>'+
+'<div class="m">'+esc(b.title||"sans titre")+'</div></div>'+
+'<span class="badge '+(isHero?"b-hero":"b-card")+'">'+(isHero?"🏆 HERO":"📢 CARTE")+'</span>'+
 '<span class="badge '+(b.active?"b-active":"b-hidden")+'">'+(b.active?"ON":"OFF")+'</span>'+
 '<button class="btn sm gray" onclick="toggleBanner('+b.id+')">'+(b.active?"Éteindre":"Allumer")+'</button>'+
 '<button class="btn sm red" onclick="delBanner('+b.id+')">Supprimer</button>'+
 '</div></div>';
 }
-}else html='<p class="sub">Aucune bannière. Ajoute la première ci-dessus 👆</p>';
+}else html='<p class="sub">Aucune publicité. Crée la première ci-dessus 👆</p>';
 document.getElementById("banners-rows").innerHTML=html;
 }
 
@@ -321,7 +352,7 @@ catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
 }
 
 async function delBanner(id){
-if(!confirm("Supprimer cette bannière ?"))return;
+if(!confirm("Supprimer cette publicité ?"))return;
 status("Suppression…","wait");
 try{await rpc("admin_delete_banner",{p_token:S.token,p_id:id});toast("🗑️ Supprimée");await refreshAll();}
 catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
