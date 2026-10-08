@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BazarMada — Admin v2</title>
+<title>BazarMada — Admin v3</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif}
 body{background:#111827;color:#e5e7eb;min-height:100vh}
@@ -20,7 +20,7 @@ input{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font
 .btn.gray{background:#374151;color:#e5e7eb}
 .btn.red{background:#7f1d1d;color:#fecaca}
 .btn.sm{display:inline-block;width:auto;padding:7px 12px;font-size:12px;border-radius:8px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
 .stat{background:#1f2937;border-radius:12px;padding:14px;text-align:center}
 .stat b{display:block;font-size:24px;color:#34d399}
 .stat span{font-size:12px;color:#9ca3af}
@@ -37,6 +37,8 @@ input{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font
 .t{font-weight:700;font-size:14px;color:#fff}
 .m{font-size:12px;color:#9ca3af}
 .grow{flex:1;min-width:150px}
+.bthumb{width:90px;height:44px;border-radius:8px;object-fit:cover;flex:0 0 auto}
+.prev{max-width:200px;border-radius:10px;margin-top:8px;display:block}
 #status{padding:12px;border-radius:10px;font-size:14px;font-weight:700;margin-bottom:14px;display:none}
 .s-wait{background:#1e3a5f;color:#93c5fd;display:block}
 .s-ok{background:#064e3b;color:#6ee7b7;display:block}
@@ -51,7 +53,7 @@ input{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font
 
 <div id="login">
   <h1>🎛️ Bazar<span>Mada</span> — Admin</h1>
-  <div class="ver">version 2</div>
+  <div class="ver">version 3 — bannières</div>
   <p class="sub">Accès réservé à l'administrateur</p>
   <div class="card">
     <label>Numéro de téléphone</label>
@@ -77,161 +79,8 @@ input{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font
   <div class="tabs">
     <button class="tab on" id="tab-ads" onclick="showTab('ads')">📢 Annonces</button>
     <button class="tab" id="tab-sellers" onclick="showTab('sellers')">👥 Vendeurs</button>
+    <button class="tab" id="tab-banners" onclick="showTab('banners')">📣 Bannières</button>
   </div>
 
   <div id="ads-list"></div>
-  <div id="sellers-list" hidden></div>
-</div>
-
-</div>
-<script>
-const SB_URL="https://wisourxbnsnmsfgrskhv.supabase.co";
-const SB_KEY="sb_publishable_0mt79uNrwTZCeU1BxPQwaw_5NWpPo_V";
-let S=null;
-try{S=JSON.parse(sessionStorage.getItem("bm_admin")||"null")}catch(e){S=null}
-
-/* Affichage visible de TOUTES les erreurs */
-function showErr(txt){
-const b=document.getElementById("errbar");
-if(!txt){b.style.display="none";b.textContent="";return;}
-b.textContent="⚠️ "+txt;
-b.style.display="block";
-}
-window.addEventListener("error",function(e){showErr("Erreur page : "+e.message+" (ligne "+e.lineno+")");});
-window.addEventListener("unhandledrejection",function(e){
-const r=e.reason;showErr("Erreur : "+(r&&r.message?r.message:r));});
-
-function status(txt,kind){
-const s=document.getElementById("status");
-s.textContent=txt;s.className=kind?"s-"+kind:"";
-if(!kind)s.style.display="none";
-}
-
-function toast(m){status(m,"ok");setTimeout(function(){if(document.getElementById("status").textContent===m)status("");},3000);}
-function fmt(n){return new Intl.NumberFormat("fr-FR").format(n)+" Ar";}
-function normPhone(p){p=String(p).replace(/\D/g,"");if(p.length===12&&p.indexOf("261")===0)p="0"+p.slice(3);return p;}
-function esc(s){return String(s==null?"":s).replace(/</g,"&lt;").replace(/"/g,"&quot;");}
-
-async function rpc(name,args){
-const r=await fetch(SB_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(args)});
-const d=await r.json().catch(function(){return {};});
-if(!r.ok)throw new Error(d.message||("HTTP "+r.status));
-return d;
-}
-
-async function adminLogin(){
-showErr("");status("Connexion en cours…","wait");
-const phone=normPhone(document.getElementById("l-phone").value);
-const pass=document.getElementById("l-pass").value;
-if(!phone||!pass){status("Remplis numéro et mot de passe","err");return;}
-try{
-const d=await rpc("login_seller",{p_phone:phone,p_pass:pass});
-if(!d||!d.is_admin){status("⛔ Accès réservé — ce compte n'est pas admin","err");return;}
-S=d;
-try{sessionStorage.setItem("bm_admin",JSON.stringify(d));}catch(e){}
-openPanel();
-}catch(e){status("❌ "+(e.message||"Connexion impossible"),"err");}
-}
-
-function adminLogout(){
-S=null;
-try{sessionStorage.removeItem("bm_admin");}catch(e){}
-document.getElementById("panel").hidden=true;
-document.getElementById("login").hidden=false;
-status("");
-}
-
-function openPanel(){
-status("");
-document.getElementById("login").hidden=true;
-document.getElementById("panel").hidden=false;
-document.getElementById("who").textContent="Connecté : "+(S.name||S.phone);
-refreshAll();
-}
-
-async function refreshAll(){
-status("Chargement des données…","wait");
-try{
-const st=await rpc("admin_stats",{p_token:S.token});
-document.getElementById("stats").innerHTML=
-'<div class="stat"><b>'+st.ads_total+'</b><span>Annonces</span></div>'+
-'<div class="stat"><b>'+st.ads_active+'</b><span>Actives</span></div>'+
-'<div class="stat"><b>'+st.ads_today+'</b><span>Aujourd\'hui</span></div>'+
-'<div class="stat"><b>'+st.sellers_total+'</b><span>Vendeurs</span></div>'+
-'<div class="stat"><b>'+st.sellers_blocked+'</b><span>Bloqués</span></div>';
-status("✅ Données chargées","ok");
-setTimeout(function(){status("");},1500);
-}catch(e){status("⚠️ "+(e.message||"Erreur stats"),"err");}
-try{await loadAds();}catch(e){status("⚠️ Annonces : "+(e.message||"erreur"),"err");}
-try{await loadSellers();}catch(e){status("⚠️ Vendeurs : "+(e.message||"erreur"),"err");}
-}
-
-function showTab(t){
-document.getElementById("tab-ads").className="tab"+(t==="ads"?" on":"");
-document.getElementById("tab-sellers").className="tab"+(t==="sellers"?" on":"");
-document.getElementById("ads-list").hidden=(t!=="ads");
-document.getElementById("sellers-list").hidden=(t!=="sellers");
-}
-
-async function loadAds(){
-const list=await rpc("admin_list_ads",{p_token:S.token,p_limit:100});
-let html="";
-if(list&&list.length){
-for(let i=0;i<list.length;i++){
-const a=list[i];
-const vis=(a.status==="active");
-html+='<div class="card"><div class="row">'+
-'<div class="grow"><div class="t">'+esc(a.title)+'</div>'+
-'<div class="m">'+fmt(a.price)+' · 📍 '+esc(a.city)+' · '+esc(a.cat)+'</div>'+
-'<div class="m">☎️ '+esc(a.phone)+' · '+(a.created_at?new Date(a.created_at).toLocaleDateString("fr-FR"):"")+'</div></div>'+
-'<span class="badge '+(vis?"b-active":"b-hidden")+'">'+(vis?"visible":"masquée")+'</span>'+
-'<button class="btn sm gray" onclick="toggleAd('+a.id+',\''+(vis?"hidden":"active")+'\')">'+(vis?"Masquer":"Afficher")+'</button>'+
-'<button class="btn sm red" onclick="removeAd('+a.id+')">Supprimer</button>'+
-'</div></div>';
-}
-}else html='<p class="sub">Aucune annonce.</p>';
-document.getElementById("ads-list").innerHTML=html;
-}
-
-async function toggleAd(id,st){
-status("Modification…","wait");
-try{await rpc("admin_set_ad_status",{p_token:S.token,p_ad_id:id,p_status:st});toast("✅ Fait");await refreshAll();}
-catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
-}
-
-async function removeAd(id){
-if(!confirm("Supprimer définitivement cette annonce ?"))return;
-status("Suppression…","wait");
-try{await rpc("admin_delete_ad",{p_token:S.token,p_ad_id:id});toast("🗑️ Supprimée");await refreshAll();}
-catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
-}
-
-async function loadSellers(){
-const list=await rpc("admin_list_sellers",{p_token:S.token});
-let html="";
-if(list&&list.length){
-for(let i=0;i<list.length;i++){
-const v=list[i];
-html+='<div class="card"><div class="row">'+
-'<div class="grow"><div class="t">'+esc(v.name||"Vendeur")+'</div>'+
-'<div class="m">☎️ '+esc(v.phone)+' · '+v.ads_count+' annonce(s)</div>'+
-'<div class="m">Inscrit le '+(v.created_at?new Date(v.created_at).toLocaleDateString("fr-FR"):"?")+'</div></div>'+
-(v.is_admin?'<span class="badge b-admin">👑 admin</span>':'')+
-'<span class="badge '+(v.blocked?"b-block":"b-ok")+'">'+(v.blocked?"bloqué":"actif")+'</span>'+
-(v.id===S.seller_id?'':'<button class="btn sm '+(v.blocked?"green":"gray")+'" onclick="toggleBlock(\''+v.id+'\')">'+(v.blocked?"Débloquer":"Bloquer")+'</button>')+
-'</div></div>';
-}
-}else html='<p class="sub">Aucun vendeur.</p>';
-document.getElementById("sellers-list").innerHTML=html;
-}
-
-async function toggleBlock(id){
-status("Modification…","wait");
-try{await rpc("admin_toggle_block",{p_token:S.token,p_seller_id:id});toast("✅ Fait");await refreshAll();}
-catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
-}
-
-if(S){try{openPanel();}catch(e){showErr("Erreur ouverture session : "+e.message);}}
-</script>
-</body>
-</html>
+  <div id="
