@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BazarMada — Admin v3</title>
+<title>BazarMada — Admin v4</title>
+<script>
+window.addEventListener("error",function(e){var b=document.getElementById("errbar");if(b){b.textContent="⚠️ Erreur page : "+(e.message||"inconnue")+" (ligne "+e.lineno+")";b.style.display="block";}});
+window.addEventListener("unhandledrejection",function(e){var r=e.reason;var b=document.getElementById("errbar");if(b){b.textContent="⚠️ Erreur : "+((r&&r.message)?r.message:r);b.style.display="block";}});
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif}
 body{background:#111827;color:#e5e7eb;min-height:100vh}
@@ -53,7 +57,7 @@ input{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font
 
 <div id="login">
   <h1>🎛️ Bazar<span>Mada</span> — Admin</h1>
-  <div class="ver">version 3 — bannières</div>
+  <div class="ver">version 4</div>
   <p class="sub">Accès réservé à l'administrateur</p>
   <div class="card">
     <label>Numéro de téléphone</label>
@@ -83,4 +87,247 @@ input{width:100%;padding:12px;border:1.5px solid #374151;border-radius:10px;font
   </div>
 
   <div id="ads-list"></div>
-  <div id="
+  <div id="sellers-list" hidden></div>
+
+  <div id="banners-list" hidden>
+    <div class="card">
+      <div class="t" style="margin-bottom:4px">➕ Ajouter une bannière</div>
+      <div class="m" style="margin-bottom:8px">Image large (paysage) recommandée. Elle sera affichée 2 par ligne dans l'app.</div>
+      <input id="b-link" type="url" placeholder="Lien (optionnel) — ex : https://wa.me/261343994907">
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <button class="btn green" style="flex:1" onclick="document.getElementById('b-img').click()">🖼️ Choisir l'image</button>
+        <button class="btn green" style="flex:1" onclick="addBanner()">Ajouter</button>
+      </div>
+      <input id="b-img" type="file" accept="image/*" hidden>
+      <img id="b-prev" class="prev" hidden alt="">
+    </div>
+    <div id="banners-rows"></div>
+  </div>
+</div>
+
+</div>
+<script>
+const SB_URL="https://wisourxbnsnmsfgrskhv.supabase.co";
+const SB_KEY="sb_publishable_0mt79uNrwTZCeU1BxPQwaw_5NWpPo_V";
+let S=null,bFile=null;
+try{S=JSON.parse(sessionStorage.getItem("bm_admin")||"null")}catch(e){S=null}
+
+function showErr(txt){
+const b=document.getElementById("errbar");
+if(!txt){b.style.display="none";b.textContent="";return;}
+b.textContent="⚠️ "+txt;
+b.style.display="block";
+}
+
+function status(txt,kind){
+const s=document.getElementById("status");
+s.textContent=txt;s.className=kind?"s-"+kind:"";
+if(!kind)s.style.display="none";
+}
+function toast(m){status(m,"ok");setTimeout(function(){if(document.getElementById("status").textContent===m)status("");},3000);}
+function fmt(n){return new Intl.NumberFormat("fr-FR").format(n)+" Ar";}
+function normPhone(p){p=String(p).replace(/\D/g,"");if(p.length===12&&p.indexOf("261")===0)p="0"+p.slice(3);return p;}
+function esc(s){return String(s==null?"":s).replace(/</g,"&lt;").replace(/"/g,"&quot;");}
+
+async function rpc(name,args){
+const r=await fetch(SB_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(args)});
+const d=await r.json().catch(function(){return {};});
+if(!r.ok)throw new Error(d.message||("HTTP "+r.status));
+return d;
+}
+
+async function adminLogin(){
+showErr("");status("Connexion en cours…","wait");
+const phone=normPhone(document.getElementById("l-phone").value);
+const pass=document.getElementById("l-pass").value;
+if(!phone||!pass){status("Remplis numéro et mot de passe","err");return;}
+try{
+const d=await rpc("login_seller",{p_phone:phone,p_pass:pass});
+if(!d||!d.is_admin){status("⛔ Accès réservé — ce compte n'est pas admin","err");return;}
+S=d;
+try{sessionStorage.setItem("bm_admin",JSON.stringify(d));}catch(e){}
+openPanel();
+}catch(e){status("❌ "+(e.message||"Connexion impossible"),"err");}
+}
+
+function adminLogout(){
+S=null;
+try{sessionStorage.removeItem("bm_admin");}catch(e){}
+document.getElementById("panel").hidden=true;
+document.getElementById("login").hidden=false;
+status("");
+}
+
+function openPanel(){
+status("");
+document.getElementById("login").hidden=true;
+document.getElementById("panel").hidden=false;
+document.getElementById("who").textContent="Connecté : "+(S.name||S.phone);
+refreshAll();
+}
+
+async function refreshAll(){
+status("Chargement…","wait");
+try{
+const st=await rpc("admin_stats",{p_token:S.token});
+document.getElementById("stats").innerHTML=
+'<div class="stat"><b>'+st.ads_total+'</b><span>Annonces</span></div>'+
+'<div class="stat"><b>'+st.ads_active+'</b><span>Actives</span></div>'+
+'<div class="stat"><b>'+st.ads_today+'</b><span>Aujourd\'hui</span></div>'+
+'<div class="stat"><b>'+st.sellers_total+'</b><span>Vendeurs</span></div>'+
+'<div class="stat"><b>'+st.sellers_blocked+'</b><span>Bloqués</span></div>'+
+'<div class="stat"><b>'+(st.banners_active!=null?st.banners_active:"?")+'</b><span>Bannières ON</span></div>';
+}catch(e){status("⚠️ "+(e.message||"Erreur stats"),"err");}
+try{await loadAds();}catch(e){status("⚠️ Annonces : "+(e.message||"erreur"),"err");}
+try{await loadSellers();}catch(e){status("⚠️ Vendeurs : "+(e.message||"erreur"),"err");}
+try{await loadBanners();}catch(e){status("⚠️ Bannières : "+(e.message||"erreur — lance le SQL bannières"),"err");}
+status("");
+}
+
+function showTab(t){
+document.getElementById("tab-ads").className="tab"+(t==="ads"?" on":"");
+document.getElementById("tab-sellers").className="tab"+(t==="sellers"?" on":"");
+document.getElementById("tab-banners").className="tab"+(t==="banners"?" on":"");
+document.getElementById("ads-list").hidden=(t!=="ads");
+document.getElementById("sellers-list").hidden=(t!=="sellers");
+document.getElementById("banners-list").hidden=(t!=="banners");
+}
+
+async function loadAds(){
+const list=await rpc("admin_list_ads",{p_token:S.token,p_limit:100});
+let html="";
+if(list&&list.length){
+for(let i=0;i<list.length;i++){
+const a=list[i];
+const vis=(a.status==="active");
+html+='<div class="card"><div class="row">'+
+'<div class="grow"><div class="t">'+esc(a.title)+'</div>'+
+'<div class="m">'+fmt(a.price)+' · 📍 '+esc(a.city)+' · '+esc(a.cat)+'</div>'+
+'<div class="m">☎️ '+esc(a.phone)+' · '+(a.created_at?new Date(a.created_at).toLocaleDateString("fr-FR"):"")+'</div></div>'+
+'<span class="badge '+(vis?"b-active":"b-hidden")+'">'+(vis?"visible":"masquée")+'</span>'+
+'<button class="btn sm gray" onclick="toggleAd('+a.id+',\''+(vis?"hidden":"active")+'\')">'+(vis?"Masquer":"Afficher")+'</button>'+
+'<button class="btn sm red" onclick="removeAd('+a.id+')">Supprimer</button>'+
+'</div></div>';
+}
+}else html='<p class="sub">Aucune annonce.</p>';
+document.getElementById("ads-list").innerHTML=html;
+}
+
+async function toggleAd(id,st){
+status("Modification…","wait");
+try{await rpc("admin_set_ad_status",{p_token:S.token,p_ad_id:id,p_status:st});toast("✅ Fait");await refreshAll();}
+catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
+}
+
+async function removeAd(id){
+if(!confirm("Supprimer définitivement cette annonce ?"))return;
+status("Suppression…","wait");
+try{await rpc("admin_delete_ad",{p_token:S.token,p_ad_id:id});toast("🗑️ Supprimée");await refreshAll();}
+catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
+}
+
+async function loadSellers(){
+const list=await rpc("admin_list_sellers",{p_token:S.token});
+let html="";
+if(list&&list.length){
+for(let i=0;i<list.length;i++){
+const v=list[i];
+html+='<div class="card"><div class="row">'+
+'<div class="grow"><div class="t">'+esc(v.name||"Vendeur")+'</div>'+
+'<div class="m">☎️ '+esc(v.phone)+' · '+v.ads_count+' annonce(s)</div>'+
+'<div class="m">Inscrit le '+(v.created_at?new Date(v.created_at).toLocaleDateString("fr-FR"):"?")+'</div></div>'+
+(v.is_admin?'<span class="badge b-admin">👑 admin</span>':'')+
+'<span class="badge '+(v.blocked?"b-block":"b-ok")+'">'+(v.blocked?"bloqué":"actif")+'</span>'+
+(v.id===S.seller_id?'':'<button class="btn sm '+(v.blocked?"green":"gray")+'" onclick="toggleBlock(\''+v.id+'\')">'+(v.blocked?"Débloquer":"Bloquer")+'</button>')+
+'</div></div>';
+}
+}else html='<p class="sub">Aucun vendeur.</p>';
+document.getElementById("sellers-list").innerHTML=html;
+}
+
+async function toggleBlock(id){
+status("Modification…","wait");
+try{await rpc("admin_toggle_block",{p_token:S.token,p_seller_id:id});toast("✅ Fait");await refreshAll();}
+catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
+}
+
+/* ===== 📣 Bannières ===== */
+function shrinkImg(file){
+return new Promise(function(resolve,reject){
+const img=new Image();
+img.onload=function(){
+const max=1024;
+let w=img.width,h=img.height;
+if(w>h&&w>max){h=Math.round(h*max/w);w=max;}
+else if(h>=w&&h>max){w=Math.round(w*max/h);h=max;}
+const c=document.createElement("canvas");
+c.width=w;c.height=h;
+c.getContext("2d").drawImage(img,0,0,w,h);
+c.toBlob(function(b){b?resolve(b):reject(new Error("compression"));},"image/jpeg",0.75);
+URL.revokeObjectURL(img.src);
+};
+img.onerror=function(){reject(new Error("lecture image"));};
+img.src=URL.createObjectURL(file);
+});
+}
+
+async function uplBanner(file){
+const blob=await shrinkImg(file);
+const name="banner_"+Date.now()+"_"+Math.floor(Math.random()*1e6)+".jpg";
+const r=await fetch(SB_URL+"/storage/v1/object/photos/"+name,{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"image/jpeg"},body:blob});
+if(!r.ok)throw new Error("upload "+r.status);
+return SB_URL+"/storage/v1/object/public/photos/"+name;
+}
+
+document.getElementById("b-img").addEventListener("change",function(e){
+bFile=e.target.files[0]||null;
+const p=document.getElementById("b-prev");
+if(bFile){p.src=URL.createObjectURL(bFile);p.hidden=false;}else{p.hidden=true;}
+});
+
+async function addBanner(){
+if(!bFile){status("Choisis d'abord une image 🖼️","err");return;}
+status("Envoi de la bannière…","wait");
+try{
+const url=await uplBanner(bFile);
+await rpc("admin_add_banner",{p_token:S.token,p_title:"",p_link:document.getElementById("b-link").value.trim(),p_image:url});
+bFile=null;document.getElementById("b-img").value="";document.getElementById("b-prev").hidden=true;document.getElementById("b-link").value="";
+toast("✅ Bannière ajoutée");await refreshAll();
+}catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
+}
+
+async function loadBanners(){
+const list=await rpc("admin_list_banners",{p_token:S.token});
+let html="";
+if(list&&list.length){
+for(let i=0;i<list.length;i++){
+const b=list[i];
+html+='<div class="card"><div class="row">'+
+'<img class="bthumb" src="'+esc(b.image_url)+'" alt="">'+
+'<div class="grow"><div class="m">'+esc(b.link_url||"sans lien")+'</div></div>'+
+'<span class="badge '+(b.active?"b-active":"b-hidden")+'">'+(b.active?"ON":"OFF")+'</span>'+
+'<button class="btn sm gray" onclick="toggleBanner('+b.id+')">'+(b.active?"Éteindre":"Allumer")+'</button>'+
+'<button class="btn sm red" onclick="delBanner('+b.id+')">Supprimer</button>'+
+'</div></div>';
+}
+}else html='<p class="sub">Aucune bannière. Ajoute la première ci-dessus 👆</p>';
+document.getElementById("banners-rows").innerHTML=html;
+}
+
+async function toggleBanner(id){
+status("Modification…","wait");
+try{await rpc("admin_toggle_banner",{p_token:S.token,p_id:id});toast("✅ Fait");await refreshAll();}
+catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
+}
+
+async function delBanner(id){
+if(!confirm("Supprimer cette bannière ?"))return;
+status("Suppression…","wait");
+try{await rpc("admin_delete_banner",{p_token:S.token,p_id:id});toast("🗑️ Supprimée");await refreshAll();}
+catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
+}
+
+if(S){try{openPanel();}catch(e){showErr("Erreur ouverture session : "+e.message);}}
+</script>
+</body>
+</html>
