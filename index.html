@@ -9,22 +9,31 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif}
 body{background:#f3f4f6;color:#111}
-header{background:linear-gradient(135deg,#0e7a3d,#065f46);color:#fff;padding:14px 16px 12px;position:sticky;top:0;z-index:10}
+header{background:linear-gradient(135deg,#0e7a3d,#065f46);color:#fff;padding:14px 16px 12px;position:sticky;top:0;z-index:10;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.hrow{display:flex;justify-content:space-between;align-items:center}
 .logo{font-size:22px;font-weight:800}
 .logo span{color:#a7f3d0}
-.tag{font-size:12px;opacity:.85;margin-bottom:10px}
+.rbtn{background:rgba(255,255,255,.16);border:none;color:#fff;border-radius:10px;padding:7px 11px;font-size:16px}
+.rbtn:active{background:rgba(255,255,255,.3)}
+.tag{font-size:12px;opacity:.85;margin:4px 0 10px}
 #search{width:100%;padding:11px 14px;border:none;border-radius:12px;font-size:15px;outline:none}
 #status{background:#fef3c7;color:#92400e;font-size:13px;padding:8px 12px;text-align:center}
 #cats{display:flex;gap:8px;overflow-x:auto;padding:10px 12px;background:#f3f4f6;scrollbar-width:none}
 #cats::-webkit-scrollbar{display:none}
 .chip{flex:0 0 auto;padding:7px 14px;border-radius:999px;border:1px solid #d1d5db;background:#fff;font-size:13px;font-weight:600;color:#374151}
-.chip.on{background:#0e7a3d;border-color:#0e7a3d;color:#fff}
-main{padding:12px 12px 100px}
-.card{display:flex;gap:12px;align-items:center;background:#fff;border-radius:14px;padding:10px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,.06);position:relative}
+.chip.on{background:#0e7a3d;border-color:#0e7a3d;color:#fff;box-shadow:0 2px 6px rgba(14,122,61,.35)}
+main{padding:12px 12px 110px}
+.card{display:flex;gap:12px;align-items:center;background:#fff;border-radius:14px;padding:10px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.07);position:relative;transition:transform .08s}
+.card:active{transform:scale(.985)}
 .thumb{width:70px;height:70px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:32px;flex:0 0 auto}
-.thumb.big{width:100%;height:220px;font-size:95px;border-radius:16px}
+.thumb.big{width:100%;height:220px;border-radius:16px}
 .thumb.photo{padding:0;overflow:hidden}
 .thumb.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.noimg{flex-direction:column;gap:3px}
+.noimg .ne{font-size:34px;line-height:1}
+.noimg .nc{font-size:10px;font-weight:700;color:rgba(255,255,255,.92);text-transform:uppercase;letter-spacing:.5px}
+.thumb.big.noimg .ne{font-size:95px}
+.thumb.big.noimg .nc{font-size:14px}
 .g0{background:linear-gradient(135deg,#10b981,#065f46)}
 .g1{background:linear-gradient(135deg,#3b82f6,#1e3a8a)}
 .g2{background:linear-gradient(135deg,#f59e0b,#92400e)}
@@ -34,49 +43,68 @@ main{padding:12px 12px 100px}
 .title{font-weight:700;font-size:14px;margin-bottom:3px}
 .price{color:#0e7a3d;font-weight:800;font-size:15px;margin-bottom:3px}
 .meta{font-size:12px;color:#6b7280}
+.cbadge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700}
 .heart{position:absolute;top:8px;right:8px;border:none;background:none;font-size:20px;color:#d1d5db}
 .heart.on{color:#ef4444}
-.empty{text-align:center;color:#6b7280;padding:30px 10px;font-size:14px}
+.empty{text-align:center;color:#6b7280;padding:34px 10px;font-size:14px}
+.eicon{font-size:44px;margin-bottom:10px}
 .back{border:none;background:#e5e7eb;color:#111;padding:8px 14px;border-radius:10px;font-weight:700;font-size:13px;margin-bottom:12px}
 .btn{display:block;width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:800;text-align:center;text-decoration:none}
+.btn:active{opacity:.85}
 .btn.green{background:#0e7a3d;color:#fff}
 .btn.line{background:#fff;border:1.5px solid #0e7a3d;color:#0e7a3d}
+.btn.gray{background:#fff;border:1.5px solid #d1d5db;color:#374151}
 .btnrow{display:flex;gap:10px;margin-top:14px}
-.photobtns{display:flex;gap:10px}
-.photobtns .btn{flex:1;padding:11px;font-size:14px}
 label{display:block;font-size:13px;font-weight:700;color:#374151;margin:12px 0 5px}
 input,select,textarea{width:100%;padding:11px;border:1.5px solid #d1d5db;border-radius:12px;font-size:15px;background:#fff}
 textarea{min-height:80px;resize:vertical}
-#photo-previews{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.pthumb{position:relative;width:64px;height:64px}
-.pthumb img{width:100%;height:100%;object-fit:cover;border-radius:10px}
-.px{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#111;color:#fff;border:none;font-size:11px;line-height:1}
-.dmini{width:52px;height:52px;border-radius:10px;object-fit:cover;border:2px solid #e5e7eb;flex:0 0 auto}
-.dmini.on{border-color:#0e7a3d}
-#d-gallery{display:flex;gap:8px;margin-top:8px;overflow-x:auto;padding-bottom:4px}
+.preview{width:100%;max-height:170px;object-fit:cover;border-radius:12px;margin-top:8px}
 .emojis{display:flex;gap:6px;flex-wrap:wrap}
 .em{width:42px;height:42px;border-radius:10px;border:1.5px solid #d1d5db;background:#fff;font-size:22px}
 .em.on{border-color:#0e7a3d;background:#d1fae5}
-.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;justify-content:space-around;align-items:flex-end;padding:8px 0 14px;box-shadow:0 -2px 10px rgba(0,0,0,.08);z-index:20}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;justify-content:space-around;align-items:flex-end;padding:8px 0 calc(14px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(0,0,0,.08);z-index:20}
 .bottom button{border:none;background:none;font-size:11px;font-weight:700;color:#6b7280;display:flex;flex-direction:column;align-items:center;gap:2px}
 .bottom button .i{font-size:20px}
 .fab{width:58px;height:58px;border-radius:50%;background:#0e7a3d;color:#fff!important;font-size:30px!important;transform:translateY(-16px);box-shadow:0 6px 16px rgba(14,122,61,.45)}
 .note{font-size:12px;color:#6b7280;margin-top:10px;text-align:center;line-height:1.4}
-#toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:50}
+#toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:50;max-width:90%;text-align:center}
 #toast.show{opacity:1}
 h2{font-size:18px;margin-bottom:4px}
+.footer{margin-top:24px;text-align:center;padding:16px 0 4px;color:#9ca3af;font-size:13px}
+.footer button{border:none;background:none;color:#6b7280;font-weight:600;font-size:13px;padding:0 4px}
+.copy{margin-top:8px;font-size:12px;color:#c4c8cf}
 #install{position:fixed;left:12px;right:12px;bottom:92px;background:#0e7a3d;color:#fff;border-radius:16px;padding:14px;display:none;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.25);align-items:center;gap:10px}
 #install .txt{flex:1;font-size:13px;line-height:1.35}
 #install .txt b{font-size:14px;display:block;margin-bottom:2px}
 #install button{border:none;border-radius:10px;padding:9px 13px;font-weight:800;font-size:13px}
 #install .go{background:#fff;color:#0e7a3d}
 #install .no{background:none;color:#a7f3d0}
+.skelcard{display:flex;gap:12px;align-items:center;background:#fff;border-radius:14px;padding:10px;margin-bottom:10px}
+.skel{background:linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
+.sthumb{width:70px;height:70px;border-radius:12px;flex:0 0 auto}
+.sline{height:12px;border-radius:6px;margin:7px 0}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+#welcome{position:fixed;inset:0;background:linear-gradient(160deg,#0e7a3d,#064e3b);z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;color:#fff}
+#welcome[hidden]{display:none}
+.w-logo{font-size:40px;font-weight:800}
+.w-logo span{color:#a7f3d0}
+.w-sub{margin:8px 0 24px;font-size:15px;opacity:.9}
+.w-points{font-size:15px;line-height:2.1;margin-bottom:30px;text-align:left}
+.w-go{background:#fff;color:#0e7a3d;border:none;border-radius:14px;padding:14px 44px;font-size:16px;font-weight:800}
+#info{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px}
+#info[hidden]{display:none}
+.icard{background:#fff;border-radius:18px;padding:20px;max-width:400px;width:100%;max-height:80vh;overflow:auto}
+.icard h3{margin-bottom:10px}
+.info-b{font-size:14px;line-height:1.7;color:#374151;margin-bottom:16px}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">Bazar<span>Mada</span></div>
+  <div class="hrow">
+    <div class="logo">Bazar<span>Mada</span></div>
+    <button id="refresh" class="rbtn">🔄</button>
+  </div>
   <div class="tag">Acheter &amp; vendre partout à Madagasikara 🇲🇬</div>
   <input id="search" type="search" placeholder="Rechercher un article, une ville…">
 </header>
@@ -85,21 +113,28 @@ h2{font-size:18px;margin-bottom:4px}
 <div id="cats"></div>
 
 <main>
-  <section id="page-home"><div id="ads"><p class="empty">⏳ Chargement…</p></div></section>
+  <section id="page-home">
+    <div id="ads"></div>
+    <footer class="footer">
+      <button onclick="openInfo('about')">À propos</button> · <button onclick="openInfo('contact')">Contact</button> · <button onclick="openInfo('secu')">Sécurité</button>
+      <div class="copy">BazarMada © 2025 — Fait avec ❤️ à Madagascar</div>
+    </footer>
+  </section>
 
   <section id="page-detail" hidden>
     <button class="back" onclick="show('page-home')">← Retour</button>
     <div id="d-thumb"></div>
-    <div id="d-gallery"></div>
-    <h2 id="d-title" style="margin:12px 0 4px"></h2>
-    <div class="price" id="d-price" style="font-size:19px"></div>
-    <div class="meta" id="d-meta" style="margin-bottom:6px"></div>
-    <div class="meta" id="d-phone" style="font-weight:700;color:#111;margin-bottom:10px"></div>
+    <div style="margin:14px 0 8px" id="d-cat"></div>
+    <h2 id="d-title" style="margin-bottom:6px;font-size:19px"></h2>
+    <div class="price" id="d-price" style="font-size:24px"></div>
+    <div class="meta" id="d-meta" style="margin:6px 0 6px"></div>
+    <div class="meta" id="d-phone" style="font-weight:700;color:#111;margin-bottom:10px;font-size:14px"></div>
     <p id="d-desc" style="font-size:14px;line-height:1.5;color:#374151"></p>
     <div class="btnrow">
       <a id="d-call" class="btn green" href="tel:">📞 Appeler</a>
       <a id="d-wa" class="btn line" target="_blank" href="#">💬 WhatsApp</a>
     </div>
+    <button class="btn gray" style="margin-top:10px" onclick="shareAd()">📤 Partager cette annonce</button>
     <p class="note">⚠️ Sécurité : rencontre le vendeur en journée, vérifie l'article avant de payer, ne verse jamais d'acompte à un inconnu.</p>
   </section>
 
@@ -107,14 +142,14 @@ h2{font-size:18px;margin-bottom:4px}
     <button class="back" onclick="show('page-home')">← Annuler</button>
     <h2>Publier une annonce</h2>
     <form id="sell-form" onsubmit="submitAd(event)">
-      <label>Photos de l'article (max 3)</label>
-      <div class="photobtns">
-        <button type="button" class="btn line" onclick="pickPhotos('gallery')">🖼️ Galerie</button>
-        <button type="button" class="btn line" onclick="pickPhotos('camera')">📸 Appareil photo</button>
+      <label>Photo de l'article (optionnel)</label>
+      <div style="display:flex;gap:10px;margin-bottom:8px">
+        <button type="button" class="btn green" style="flex:1;padding:11px;font-size:13px" onclick="document.getElementById('photo-cam').click()">📸 Appareil photo</button>
+        <button type="button" class="btn line" style="flex:1;padding:11px;font-size:13px" onclick="document.getElementById('photo-gal').click()">🖼️ Choisir une photo</button>
       </div>
-      <input type="file" id="pick-gallery" accept="image/*" multiple hidden>
-      <input type="file" id="pick-camera" accept="image/*" capture="environment" hidden>
-      <div id="photo-previews"></div>
+      <input type="file" id="photo-cam" accept="image/*" capture="environment" hidden>
+      <input type="file" id="photo-gal" accept="image/*" hidden>
+      <img id="photo-preview" class="preview" hidden alt="">
       <label>Choisis une icône (si pas de photo)</label>
       <div class="emojis" id="emoji-pick"></div>
       <input type="hidden" name="emoji" value="📦">
@@ -157,6 +192,21 @@ h2{font-size:18px;margin-bottom:4px}
 <div id="toast"></div>
 <div id="install"><div class="txt"><b>📲 Installer BazarMada</b>Plein écran, plus rapide, comme une vraie app</div><button class="go">Installer</button><button class="no">✕</button></div>
 
+<div id="welcome" hidden>
+  <div class="w-logo">Bazar<span>Mada</span></div>
+  <div class="w-sub">Acheter &amp; vendre partout à Madagasikara 🇲🇬</div>
+  <div class="w-points">✅ Publiez gratuitement en 1 minute<br>📞 Contactez les vendeurs en direct<br>🇲🇬 100 % malgache, simple et léger</div>
+  <button class="w-go" onclick="startApp()">C'est parti !</button>
+</div>
+
+<div id="info" hidden>
+  <div class="icard">
+    <h3 id="info-t"></h3>
+    <div class="info-b" id="info-b"></div>
+    <button class="btn green" onclick="closeInfo()">Fermer</button>
+  </div>
+</div>
+
 <script>
 /* ====== CONFIGURATION ====== */
 const SB_URL="https://wisourxbnsnmsfgrskhv.supabase.co";
@@ -166,6 +216,12 @@ const H={apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"applicatio
 
 const $=s=>document.querySelector(s);
 const CATS=["Téléphones","Informatique","Véhicules","Immobilier","Maison","Mode","Emploi","Divers"];
+const CATC={"Téléphones":["#dbeafe","#1d4ed8"],"Informatique":["#ede9fe","#6d28d9"],"Véhicules":["#fee2e2","#b91c1c"],"Immobilier":["#d1fae5","#047857"],"Maison":["#fef3c7","#b45309"],"Mode":["#fce7f3","#be185d"],"Emploi":["#e0e7ff","#4338ca"],"Divers":["#f3f4f6","#4b5563"]};
+const INFO={
+about:{t:"À propos de BazarMada",b:"BazarMada est la marketplace 100 % malgache 🇲🇬<br><br>Publiez vos annonces gratuitement et contactez directement les vendeurs, partout dans l'île. Simple, léger, pensé pour fonctionner même avec une petite connexion."},
+contact:{t:"Nous contacter",b:"Une question, un problème, une suggestion ?<br><br>📧 contact@bazarmada.mg<br>📞 034 00 000 00<br><br>Nous répondons aussi sur WhatsApp."},
+secu:{t:"Conseils sécurité",b:"• Rencontrez le vendeur en journée, dans un lieu public<br>• Vérifiez l'article avant de payer<br>• Ne versez jamais d'acompte à un inconnu<br>• Méfiez-vous des prix trop beaux pour être vrais<br><br>Signalez toute annonce suspecte à nos contacts."}
+};
 const DEMO=[
 {id:1,title:"iPhone 11 128 Go — très bon état",price:1450000,cat:"Téléphones",city:"Antananarivo",desc:"Batterie 87 %, aucune rayure, avec chargeur d'origine.",emoji:"📱",phone:"0340000000"},
 {id:2,title:"Ordinateur portable HP i5",price:2350000,cat:"Informatique",city:"Antananarivo",desc:"Core i5, SSD 256 Go. Parfait pour les études.",emoji:"💻",phone:"0340000000"},
@@ -179,24 +235,26 @@ const DEMO=[
 
 let publicAds=[],mine=JSON.parse(localStorage.getItem("mm_ads")||"[]");
 let favs=new Set(JSON.parse(localStorage.getItem("mm_favs")||"[]"));
-let ads=[],currentCat="Tout",query="",online=false,fresh=[],photoFiles=[];
+let ads=[],currentCat="Tout",query="",online=false,fresh=[],photoFile=null,currentAd=null;
 
 function saveMine(){localStorage.setItem("mm_ads",JSON.stringify(mine));}
 function saveFavs(){localStorage.setItem("mm_favs",JSON.stringify([...favs]));}
 function fmt(n){return new Intl.NumberFormat("fr-FR").format(n)+" Ar";}
 function grad(a){return "g"+(a.id%5);}
 function esc(s){return String(s).replace(/</g,"&lt;").replace(/"/g,"&quot;");}
+function badge(c){const x=CATC[c]||CATC["Divers"];return `<span class="cbadge" style="background:${x[0]};color:${x[1]}">${esc(c)}</span>`;}
 function show(id){document.querySelectorAll("main section").forEach(s=>s.hidden=(s.id!==id));window.scrollTo(0,0);}
 function showMine(){renderMine();show("page-mine");}
 function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
 function waNum(p){p=String(p).replace(/\D/g,"");if(p.startsWith("0"))p="261"+p.slice(1);else if(!p.startsWith("261"))p="261"+p;return p;}
-function fmtPhone(p){p=String(p).replace(/\D/g,"");if(p.startsWith("261")&&p.length===12)p="0"+p.slice(3);const m=p.replace(/(\d{3})(\d{2})(\d{3})(\d{2})/,"$1 $2 $3 $4");return m;}
-function photosOf(a){return (a.photo_urls&&a.photo_urls.length)?a.photo_urls:(a.photo_url?[a.photo_url]:[]);}
+function fmtPhone(p){p=String(p).replace(/\D/g,"");if(p.startsWith("261")&&p.length===12)p="0"+p.slice(3);return p.replace(/(\d{3})(\d{2})(\d{3})(\d{2})/,"$1 $2 $3 $4");}
 function thumbHTML(a,big){
 const cls="thumb"+(big?" big":"");
-const u=photosOf(a);
-if(u.length)return `<div class="${cls} photo"><img src="${esc(u[0])}" alt="" loading="lazy"></div>`;
-return `<div class="${cls} ${grad(a)}">${a.emoji}</div>`;
+if(a.photo_url)return `<div class="${cls} photo"><img src="${esc(a.photo_url)}" alt="" loading="lazy"></div>`;
+return `<div class="${cls} ${grad(a)} noimg"><span class="ne">${a.emoji}</span><span class="nc">${esc(a.cat)}</span></div>`;
+}
+function renderSkeletons(){
+ $("#ads").innerHTML=Array(5).fill('<div class="skelcard"><div class="skel sthumb"></div><div style="flex:1"><div class="skel sline" style="width:75%"></div><div class="skel sline" style="width:50%"></div><div class="skel sline" style="width:35%"></div></div></div>').join("");
 }
 
 function card(a){
@@ -204,13 +262,13 @@ return `<div class="card" onclick="openDetail(${a.id})">
  ${thumbHTML(a,false)}
 <div class="info"><div class="title">${esc(a.title)}</div>
 <div class="price">${fmt(a.price)}</div>
-<div class="meta">📍 ${esc(a.city)} · ${a.cat}</div></div>
+<div class="meta">📍 ${esc(a.city)} · ${esc(a.cat)}</div></div>
 <button class="heart ${favs.has(a.id)?"on":""}" onclick="event.stopPropagation();toggleFav(${a.id})">♥</button></div>`;
 }
 
 function render(){
 const list=ads.filter(a=>(currentCat==="Tout"||a.cat===currentCat)&&(a.title+" "+a.city).toLowerCase().includes(query));
- $("#ads").innerHTML=list.length?list.map(card).join(""):`<p class="empty">Aucune annonce trouvée 🙏<br>Essaie une autre recherche — ou publie la première !</p>`;
+ $("#ads").innerHTML=list.length?list.map(card).join("")+`<footer class="footer"><button onclick="openInfo('about')">À propos</button> · <button onclick="openInfo('contact')">Contact</button> · <button onclick="openInfo('secu')">Sécurité</button><div class="copy">BazarMada © 2025 — Fait avec ❤️ à Madagascar</div></footer>`:`<div class="empty"><div class="eicon">🔍</div>Aucune annonce trouvée 🙏<br>Essaie une autre recherche — ou publie la première !</div>`;
 }
 
 function renderStatus(){
@@ -223,18 +281,13 @@ function toggleFav(id){favs.has(id)?favs.delete(id):favs.add(id);saveFavs();if(!
 
 function openDetail(id){
 const a=ads.find(x=>x.id===id);if(!a)return;
-const urls=photosOf(a);
-if(urls.length){
- $("#d-thumb").innerHTML=`<div class="thumb photo big"><img id="d-img" src="${esc(urls[0])}" alt=""></div>`;
- $("#d-gallery").innerHTML=urls.length>1?urls.map((u,i)=>`<img class="dmini${i===0?" on":""}" src="${esc(u)}" alt="" onclick="swapPhoto('${esc(u)}',this)">`).join(""):"";
-}else{
- $("#d-thumb").innerHTML=`<div class="thumb big ${grad(a)}">${a.emoji}</div>`;
- $("#d-gallery").innerHTML="";
-}
+currentAd=a;
+ $("#d-thumb").innerHTML=thumbHTML(a,true);
+ $("#d-cat").innerHTML=badge(a.cat);
  $("#d-title").textContent=a.title;
  $("#d-price").textContent=fmt(a.price);
 const d=a.created_at?new Date(a.created_at).toLocaleDateString("fr-FR"):a.date;
- $("#d-meta").textContent="📍 "+a.city+" · "+a.cat+(d?" · publié le "+d:"");
+ $("#d-meta").textContent="📍 "+a.city+(d?" · publié le "+d:"");
  $("#d-phone").textContent="☎️ Vendeur : "+fmtPhone(a.phone||"");
  $("#d-desc").textContent=a.description||a.desc||"";
  $("#d-call").href="tel:+"+waNum(a.phone||"");
@@ -242,20 +295,25 @@ const d=a.created_at?new Date(a.created_at).toLocaleDateString("fr-FR"):a.date;
 show("page-detail");
 }
 
-function swapPhoto(u,el){
-const im=document.getElementById("d-img");
-if(im)im.src=u;
-document.querySelectorAll(".dmini").forEach(x=>x.classList.remove("on"));
-el.classList.add("on");
+async function shareAd(){
+if(!currentAd)return;
+const txt=currentAd.title+" — "+fmt(currentAd.price)+" — à voir sur BazarMada";
+const url=location.origin;
+if(navigator.share){try{await navigator.share({title:"BazarMada",text:txt,url});}catch(e){}}
+else{window.open("https://wa.me/?text="+encodeURIComponent(txt+" "+url),"_blank");}
 }
 
 function renderMine(){
- $("#mine-list").innerHTML=mine.length?mine.map(a=>`<div class="card">${thumbHTML(a,false)}<div class="info"><div class="title">${esc(a.title)} ${a.pending?'<span style="color:#f59e0b;font-weight:700">⏳ en attente</span>':""}</div><div class="price">${fmt(a.price)}</div><div class="meta">📍 ${esc(a.city)} · ${a.cat}</div></div><button class="heart" style="position:static;font-size:22px" onclick="delAd(${a.id})">🗑️</button></div>`).join(""):`<p class="empty">Rien en attente. Tes publications apparaissent directement sur l'accueil.<br>(Les comptes vendeurs arrivent bientôt !)</p>`;
+ $("#mine-list").innerHTML=mine.length?mine.map(a=>`<div class="card">${thumbHTML(a,false)}<div class="info"><div class="title">${esc(a.title)} ${a.pending?'<span style="color:#f59e0b;font-weight:700">⏳ en attente</span>':""}</div><div class="price">${fmt(a.price)}</div><div class="meta">📍 ${esc(a.city)} · ${esc(a.cat)}</div></div><button class="heart" style="position:static;font-size:22px" onclick="delAd(${a.id})">🗑️</button></div>`).join(""):`<div class="empty"><div class="eicon">📋</div>Rien pour l'instant.<br>Appuie sur le gros bouton ＋ pour vendre ton premier article !</div>`;
 }
 
 function delAd(id){mine=mine.filter(a=>a.id!==id);ads=[...publicAds,...mine];saveMine();renderMine();render();toast("Annonce supprimée");}
 
-/* ===== 📸 Photos : compression + envoi ===== */
+function openInfo(k){const i=INFO[k];$("#info-t").textContent=i.t;$("#info-b").innerHTML=i.b;$("#info").hidden=false;}
+function closeInfo(){$("#info").hidden=true;}
+function startApp(){$("#welcome").hidden=true;localStorage.setItem("mm_welcomed","1");}
+
+/* ===== 📸 Photo : compression + envoi ===== */
 function shrinkPhoto(file){
 return new Promise((resolve,reject)=>{
 const img=new Image();
@@ -287,22 +345,14 @@ if(!r.ok)throw new Error("upload "+r.status);
 return SB_URL+"/storage/v1/object/public/photos/"+name;
 }
 
-function pickPhotos(which){document.getElementById("pick-"+which).click();}
-function renderPreviews(){
- $("#photo-previews").innerHTML=photoFiles.map((f,i)=>`<div class="pthumb"><img src="${f._url}" alt=""><button type="button" class="px" onclick="rmPhoto(${i})">✕</button></div>`).join("");
+function pickPhoto(e){
+photoFile=e.target.files[0]||null;
+const p=$("#photo-preview");
+if(photoFile&&photoFile.type.startsWith("image/")){p.src=URL.createObjectURL(photoFile);p.hidden=false;}
+else{photoFile=null;p.hidden=true;}
 }
-function rmPhoto(i){URL.revokeObjectURL(photoFiles[i]._url);photoFiles.splice(i,1);renderPreviews();}
-
-["pick-gallery","pick-camera"].forEach(id=>{
-document.getElementById(id).addEventListener("change",e=>{
-[...e.target.files].forEach(f=>{
-if(photoFiles.length<3&&f.type.startsWith("image/"))photoFiles.push(Object.assign(f,{_url:URL.createObjectURL(f)}));
-});
-if(photoFiles.length>=3)toast("Maximum 3 photos — garde les meilleures 📸");
-renderPreviews();
-e.target.value="";
-});
-});
+ $("#photo-cam").addEventListener("change",pickPhoto);
+ $("#photo-gal").addEventListener("change",pickPhoto);
 
 async function publishAd(a){
 const r=await fetch(API,{method:"POST",headers:{...H,Prefer:"return=representation"},body:JSON.stringify([a])});
@@ -316,15 +366,7 @@ const f=e.target,btn=f.querySelector('button[type=submit]');
 const ad={title:f.title.value.trim(),price:+f.price.value,cat:f.cat.value,city:f.city.value,description:f.desc.value.trim(),emoji:f.emoji.value,phone:f.phone.value.trim()};
 btn.disabled=true;
 try{
-if(photoFiles.length){
-const urls=[];
-for(let i=0;i<photoFiles.length;i++){
-btn.textContent=`📸 Photo ${i+1}/${photoFiles.length}…`;
-try{urls.push(await uploadPhoto(photoFiles[i]));}catch(err){}
-}
-if(urls.length)ad.photo_urls=urls;
-if(urls.length<photoFiles.length)toast(" Certaines photos n'ont pas pu partir");
-}
+if(photoFile){btn.textContent="📸 Photo…";try{ad.photo_url=await uploadPhoto(photoFile);}catch(err){toast("📸 Photo non envoyée — publication sans photo");}}
 btn.textContent="Envoi…";
 const saved=await publishAd(ad);
 publicAds.unshift(saved);
@@ -337,9 +379,8 @@ saveMine();ads=[...publicAds,...mine];
 render();show("page-home");
 toast("📡 Pas de connexion — enregistrée sur ton téléphone");
 }
-photoFiles.forEach(x=>URL.revokeObjectURL(x._url));
-photoFiles=[];renderPreviews();
-f.reset();
+photoFile=null;f.reset();
+ $("#photo-preview").hidden=true;
 document.querySelectorAll(".em").forEach(x=>x.classList.toggle("on",x.textContent==="📦"));
 btn.disabled=false;btn.textContent="Publier mon annonce";
 }
@@ -358,6 +399,7 @@ if(fresh.length)toast("✅ "+fresh.length+" annonce(s) envoyée(s) en ligne !");
 }
 
 async function loadAds(){
+renderSkeletons();
 try{
 const r=await fetch(API+"?select=*&status=eq.active&order=created_at.desc",{headers:H});
 if(!r.ok)throw new Error("HTTP "+r.status);
@@ -386,8 +428,10 @@ b.onclick=()=>{form.emoji.value=em;document.querySelectorAll(".em").forEach(x=>x
 });
 
  $("#search").addEventListener("input",e=>{query=e.target.value.toLowerCase();render();});
+ $("#refresh").onclick=async()=>{$("#refresh").textContent="⏳";await loadAds();$("#refresh").textContent="🔄";toast("✅ Annonces actualisées");};
 
 (async function init(){
+if(!localStorage.getItem("mm_welcomed"))$("#welcome").hidden=false;
 await syncPending();
 await loadAds();
 })();
