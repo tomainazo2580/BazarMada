@@ -13,8 +13,10 @@ header{background:linear-gradient(135deg,#0e7a3d,#065f46);color:#fff;padding:14p
 .hrow{display:flex;justify-content:space-between;align-items:center}
 .logo{font-size:22px;font-weight:800}
 .logo span{color:#a7f3d0}
+.vbtns{display:flex;gap:6px}
 .rbtn{background:rgba(255,255,255,.16);border:none;color:#fff;border-radius:10px;padding:7px 11px;font-size:16px}
 .rbtn:active{background:rgba(255,255,255,.3)}
+.rbtn.on{background:#fff;color:#0e7a3d}
 .tag{font-size:12px;opacity:.85;margin:4px 0 10px}
 #search{width:100%;padding:11px 14px;border:none;border-radius:12px;font-size:15px;outline:none}
 #status{background:#fef3c7;color:#92400e;font-size:13px;padding:8px 12px;text-align:center}
@@ -39,6 +41,16 @@ main{padding:12px 12px 110px}
 .g2{background:linear-gradient(135deg,#f59e0b,#92400e)}
 .g3{background:linear-gradient(135deg,#ef4444,#7f1d1d)}
 .g4{background:linear-gradient(135deg,#8b5cf6,#4c1d95)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.grid>.bgrid,.grid>.footer,.grid>.empty{grid-column:1/-1}
+.grid .skelcard{grid-column:1/-1}
+.gcard{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.07);position:relative;transition:transform .08s}
+.gcard:active{transform:scale(.98)}
+.gthumb{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.gthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ginfo{padding:8px 10px 10px}
+.gtitle{font-weight:700;font-size:13px;line-height:1.25;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:32px}
+.grid .heart{top:6px;right:6px}
 .info{flex:1;min-width:0}
 .title{font-weight:700;font-size:14px;margin-bottom:3px}
 .price{color:#0e7a3d;font-weight:800;font-size:15px;margin-bottom:3px}
@@ -73,6 +85,10 @@ h2{font-size:18px;margin-bottom:4px}
 .footer{margin-top:24px;text-align:center;padding:16px 0 4px;color:#9ca3af;font-size:13px}
 .footer button{border:none;background:none;color:#6b7280;font-weight:600;font-size:13px;padding:0 4px}
 .copy{margin-top:8px;font-size:12px;color:#c4c8cf}
+.bgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 10px}
+.btag{grid-column:1/-1;font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;text-align:right;margin-bottom:-6px}
+.bcard{display:block;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.07);height:72px}
+.bcard img{width:100%;height:100%;object-fit:cover;display:block}
 #install{position:fixed;left:12px;right:12px;bottom:92px;background:#0e7a3d;color:#fff;border-radius:16px;padding:14px;display:none;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.25);align-items:center;gap:10px}
 #install .txt{flex:1;font-size:13px;line-height:1.35}
 #install .txt b{font-size:14px;display:block;margin-bottom:2px}
@@ -103,7 +119,11 @@ h2{font-size:18px;margin-bottom:4px}
 <header>
   <div class="hrow">
     <div class="logo">Bazar<span>Mada</span></div>
-    <button id="refresh" class="rbtn">🔄</button>
+    <div class="vbtns">
+      <button id="v-grid" class="rbtn on" onclick="setView('grid')">⊞</button>
+      <button id="v-list" class="rbtn" onclick="setView('list')">☰</button>
+      <button id="refresh" class="rbtn">🔄</button>
+    </div>
   </div>
   <div class="tag">Acheter &amp; vendre partout à Madagasikara 🇲🇬</div>
   <input id="search" type="search" placeholder="Rechercher un article, une ville…">
@@ -115,10 +135,6 @@ h2{font-size:18px;margin-bottom:4px}
 <main>
   <section id="page-home">
     <div id="ads"></div>
-    <footer class="footer">
-      <button onclick="openInfo('about')">À propos</button> · <button onclick="openInfo('contact')">Contact</button> · <button onclick="openInfo('secu')">Sécurité</button>
-      <div class="copy">BazarMada © 2025 — Fait avec ❤️ à Madagascar</div>
-    </footer>
   </section>
 
   <section id="page-detail" hidden>
@@ -264,7 +280,8 @@ const DEMO=[
 
 let publicAds=[],mine=JSON.parse(localStorage.getItem("mm_ads")||"[]"),myServer=[];
 let favs=new Set(JSON.parse(localStorage.getItem("mm_favs")||"[]"));
-let ads=[],currentCat="Tout",query="",online=false,fresh=[],photoFile=null,currentAd=null;
+let ads=[],currentCat="Tout",query="",online=false,fresh=[],photoFile=null,currentAd=null,banners=[];
+let view=localStorage.getItem("mm_view")||"grid";
 let authMode="signup";
 
 /* ===== 🔐 Session ===== */
@@ -341,6 +358,10 @@ const cls="thumb"+(big?" big":"");
 if(a.photo_url)return '<div class="'+cls+' photo"><img src="'+esc(a.photo_url)+'" alt="" loading="lazy"></div>';
 return '<div class="'+cls+' '+grad(a)+' noimg"><span class="ne">'+a.emoji+'</span><span class="nc">'+esc(a.cat)+'</span></div>';
 }
+function gthumbHTML(a){
+if(a.photo_url)return '<div class="gthumb"><img src="'+esc(a.photo_url)+'" alt="" loading="lazy"></div>';
+return '<div class="gthumb '+grad(a)+'"><span style="font-size:54px">'+a.emoji+'</span></div>';
+}
 function renderSkeletons(){
  $("#ads").innerHTML=Array(5).fill('<div class="skelcard"><div class="skel sthumb"></div><div style="flex:1"><div class="skel sline" style="width:75%"></div><div class="skel sline" style="width:50%"></div><div class="skel sline" style="width:35%"></div></div></div>').join("");
 }
@@ -351,9 +372,51 @@ return '<div class="card" onclick="openDetail('+a.id+')">'+thumbHTML(a,false)+
 '<button class="heart '+(favs.has(a.id)?"on":"")+'" onclick="event.stopPropagation();toggleFav('+a.id+')">♥</button></div>';
 }
 
+function gcard(a){
+return '<div class="gcard" onclick="openDetail('+a.id+')">'+gthumbHTML(a)+
+'<div class="ginfo"><div class="gtitle">'+esc(a.title)+'</div>'+
+'<div class="price" style="font-size:14px;margin-bottom:2px">'+fmt(a.price)+'</div>'+
+'<div class="meta">📍 '+esc(a.city)+'</div></div>'+
+'<button class="heart '+(favs.has(a.id)?"on":"")+'" onclick="event.stopPropagation();toggleFav('+a.id+')">♥</button></div>';
+}
+
+/* ===== 📣 Bannières ===== */
+function bannerCard(b){
+const img='<img src="'+esc(b.image_url)+'" alt="Publicité" loading="lazy">';
+return b.link_url?'<a class="bcard" href="'+esc(b.link_url)+'" target="_blank" rel="noopener">'+img+'</a>':'<div class="bcard">'+img+'</div>';
+}
+function bGrid(pair){
+return '<div class="bgrid"><div class="btag">Publicité</div>'+pair.map(bannerCard).join("")+'</div>';
+}
+
+function setView(v){
+view=v;localStorage.setItem("mm_view",v);
+document.getElementById("v-grid").className="rbtn"+(v==="grid"?" on":"");
+document.getElementById("v-list").className="rbtn"+(v==="list"?" on":"");
+render();
+}
+
 function render(){
-const list=ads.filter(a=>(currentCat==="Tout"||a.cat===currentCat)&&(a.title+" "+a.city).toLowerCase().indexOf(query)>=0);
- $("#ads").innerHTML=list.length?list.map(card).join(""):'<div class="empty"><div class="eicon">🔍</div>Aucune annonce trouvée 🙏<br>Essaie une autre recherche — ou publie la première !</div>';
+const list=ads.filter(function(a){return (currentCat==="Tout"||a.cat===currentCat)&&(a.title+" "+a.city).toLowerCase().indexOf(query)>=0;});
+const wrap=$("#ads");
+wrap.className=(view==="grid")?"grid":"";
+let html="";
+if(banners.length&&!list.length){html+=bGrid([banners[0],banners[1]||banners[0]]);}
+let n=0,bi=0;
+for(let i=0;i<list.length;i++){
+html+=(view==="grid")?gcard(list[i]):card(list[i]);
+n++;
+if(!query&&currentCat==="Tout"&&banners.length&&n%6===0){
+html+=bGrid([banners[bi%banners.length],banners[(bi+1)%banners.length]]);
+bi+=2;
+}
+}
+if(!list.length){
+html+='<div class="empty"><div class="eicon">🔍</div>Aucune annonce trouvée 🙏<br>Essaie une autre recherche — ou publie la première !</div>';
+}else{
+html+='<footer class="footer"><button onclick="openInfo(\'about\')">À propos</button> · <button onclick="openInfo(\'contact\')">Contact</button> · <button onclick="openInfo(\'secu\')">Sécurité</button><div class="copy">BazarMada © 2025 — Fait avec ❤️ à Madagascar</div></footer>';
+}
+wrap.innerHTML=html;
 }
 
 function renderStatus(){
@@ -516,6 +579,10 @@ online=true;
 }catch(e){publicAds=[...DEMO];online=false;}
 fresh=[];
 ads=[...publicAds,...mine];
+try{
+const rb=await fetch(SB_URL+"/rest/v1/banners?select=*&active=eq.true&order=created_at.desc",{headers:{apikey:SB_KEY}});
+if(rb.ok)banners=await rb.json();
+}catch(e){banners=[];}
 renderStatus();render();
 }
 
@@ -539,6 +606,8 @@ b.onclick=()=>{form.emoji.value=em;document.querySelectorAll(".em").forEach(x=>x
  $("#refresh").onclick=async()=>{$("#refresh").textContent="⏳";await loadAds();$("#refresh").textContent="🔄";toast("✅ Annonces actualisées");};
 
 (async function init(){
+document.getElementById("v-grid").className="rbtn"+(view==="grid"?" on":"");
+document.getElementById("v-list").className="rbtn"+(view==="list"?" on":"");
 if(!localStorage.getItem("mm_welcomed"))$("#welcome").hidden=false;
 if(sess){
 try{
