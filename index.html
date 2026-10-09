@@ -17,8 +17,7 @@ header{background:linear-gradient(135deg,#0e7a3d,#065f46);color:#fff;padding:14p
 .rbtn{background:rgba(255,255,255,.16);border:none;color:#fff;border-radius:10px;padding:7px 11px;font-size:16px}
 .rbtn:active{background:rgba(255,255,255,.3)}
 .rbtn.on{background:#fff;color:#0e7a3d}
-.tag{font-size:12px;opacity:.85;margin:4px 0 10px}
-#search{width:100%;padding:11px 14px;border:none;border-radius:12px;font-size:15px;outline:none}
+#search{width:100%;padding:11px 14px;border:none;border-radius:12px;font-size:15px;outline:none;margin-top:10px}
 #status{background:#fef3c7;color:#92400e;font-size:13px;padding:8px 12px;text-align:center}
 #hero{margin:10px 12px 0}
 .hero{position:relative;display:block;border-radius:16px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.2);color:#fff;text-decoration:none;background:#0f172a}
@@ -87,7 +86,7 @@ textarea{min-height:80px;resize:vertical}
 .em{width:42px;height:42px;border-radius:10px;border:1.5px solid #d1d5db;background:#fff;font-size:22px}
 .em.on{border-color:#0e7a3d;background:#d1fae5}
 .bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;justify-content:space-around;align-items:flex-end;padding:8px 0 calc(14px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(0,0,0,.08);z-index:20}
-.bottom button{border:none;background:none;font-size:11px;font-weight:700;color:#6b7280;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bottom button{border:none;background:none;font-size:11px;font-weight:700;color:#6b7280;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
 .bottom button .i{font-size:20px}
 .fab{width:58px;height:58px;border-radius:50%;background:#0e7a3d;color:#fff!important;font-size:30px!important;transform:translateY(-16px);box-shadow:0 6px 16px rgba(14,122,61,.45)}
 .note{font-size:12px;color:#6b7280;margin-top:10px;text-align:center;line-height:1.4}
@@ -123,9 +122,9 @@ h2{font-size:18px;margin-bottom:4px}
 .cmine{background:#0e7a3d;color:#fff;margin-left:auto;border-bottom-right-radius:4px}
 .ctheir{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08);border-bottom-left-radius:4px}
 .ctime{font-size:10px;opacity:.7;margin-top:2px}
-.cinput{display:flex;gap:8px;padding-top:8px;position:sticky;bottom:0;background:#f3f4f6}
+.cinput{display:flex;gap:8px;padding-top:8px}
 .cinput input{flex:1}
-  .bdg{position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;font-weight:800;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.bdg{position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:999px;font-size:10px;font-weight:800;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px}
 #install{position:fixed;left:12px;right:12px;bottom:92px;background:#0e7a3d;color:#fff;border-radius:16px;padding:14px;display:none;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.25);align-items:center;gap:10px}
 #install .txt{flex:1;font-size:13px;line-height:1.35}
 #install .txt b{font-size:14px;display:block;margin-bottom:2px}
@@ -157,13 +156,11 @@ h2{font-size:18px;margin-bottom:4px}
   <div class="hrow">
     <div class="logo">Bazar<span>Mada</span></div>
     <div class="vbtns">
-      <button class="rbtn" onclick="openChats()">💬</button>
+      <button class="rbtn" style="position:relative" onclick="openChats()">💬<span id="bdg-h" class="bdg" hidden></span></button>
       <button id="v-grid" class="rbtn on" onclick="setView('grid')">⊞</button>
       <button id="v-list" class="rbtn" onclick="setView('list')">☰</button>
-      <button id="refresh" class="rbtn">🔄</button>
     </div>
   </div>
-  <div class="tag">Acheter et vendre partout à Madagascar</div>
   <input id="search" type="search" placeholder="Rechercher un article, une ville…">
 </header>
 
@@ -324,7 +321,7 @@ h2{font-size:18px;margin-bottom:4px}
   <button onclick="show('page-home')"><span class="i">🏠</span>Accueil</button>
   <button class="fab" onclick="goSell()">＋</button>
   <button onclick="showMine()"><span class="i">📋</span>Mes annonces</button>
-  <button onclick="goAccount()"><span class="i">👤</span>Compte</button>
+  <button onclick="goAccount()"><span class="i">👤</span>Compte<span id="bdg-c" class="bdg" hidden></span></button>
 </nav>
 
 <div id="toast"></div>
@@ -674,6 +671,7 @@ chatRole=c.role||"buyer";
 lastChatJson=JSON.stringify(c);
 renderChatInner(c);
 startPoll();
+checkUnread();
 }catch(e){toast(e.message||"Erreur");}
 }
 
@@ -720,8 +718,22 @@ try{
 if(chatRole==="buyer")await rpc("send_msg",{p_chat_id:chatId,p_body:body,p_buyer_token:buyerTok()});
 else await rpc("send_msg",{p_chat_id:chatId,p_body:body,p_seller_token:sess.token});
 await refreshChat();
+checkUnread();
 }catch(e){toast(e.message||"Envoi impossible");inp.value=body;}
 }
+
+/* ===== Badge messages non lus ===== */
+function setBadge(n){
+const h=document.getElementById("bdg-h"),c=document.getElementById("bdg-c");
+if(!h||!c)return;
+const txt=(n>0)?(n>9?"9+":String(n)):null;
+if(txt){h.textContent=txt;h.hidden=false;c.textContent=txt;c.hidden=false;}
+else{h.hidden=true;c.hidden=true;}
+}
+async function checkUnread(){
+try{const n=await rpc("unread_count",{p_token:(sess?sess.token:null),p_buyer_token:buyerTok()});setBadge(typeof n==="number"?n:0);}catch(e){}
+}
+setInterval(checkUnread,15000);
 
 function showMine(){
 if(!sess){toggleAuthMode("login");show("page-auth");toast("Connecte-toi pour voir tes annonces");return;}
@@ -938,8 +950,6 @@ b.onclick=()=>{form.emoji.value=em;document.querySelectorAll(".em").forEach(x=>x
 });
 
  $("#search").addEventListener("input",e=>{query=e.target.value.toLowerCase();render();});
- $("#refresh").onclick=async()=>{$("#refresh").textContent="…";await loadAds();$("#refresh").textContent="🔄";toast("Annonces actualisées");};
- $("#cbody").addEventListener("keydown",e=>{if(e.key==="Enter")sendChat();});
 
 (async function init(){
 document.getElementById("v-grid").className="rbtn"+(view==="grid"?" on":"");
@@ -954,6 +964,7 @@ if(ok&&ok.token)saveSess(ok);else saveSess(null);
 await syncPending();
 await loadAds();
 if(sess){await loadMine();renderMine();renderAccount();}
+checkUnread();
 })();
 
 /* ===== 📲 Bannière "Installer l'app" ===== */
