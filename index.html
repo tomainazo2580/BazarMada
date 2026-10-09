@@ -69,6 +69,7 @@ main{padding:12px 12px 110px}
 .cbadge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700}
 .heart{position:absolute;top:8px;right:8px;border:none;background:none;font-size:20px;color:#d1d5db}
 .heart.on{color:#ef4444}
+.fire{position:absolute;top:6px;left:6px;background:rgba(255,255,255,.92);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:800;z-index:2}
 .empty{text-align:center;color:#6b7280;padding:34px 10px;font-size:14px}
 .eicon{font-size:44px;margin-bottom:10px}
 .back{border:none;background:#e5e7eb;color:#111;padding:8px 14px;border-radius:10px;font-weight:700;font-size:13px;margin-bottom:12px}
@@ -96,6 +97,12 @@ h2{font-size:18px;margin-bottom:4px}
 .footer{margin-top:24px;text-align:center;padding:16px 0 4px;color:#9ca3af;font-size:13px}
 .footer button{border:none;background:none;color:#6b7280;font-weight:600;font-size:13px;padding:0 4px}
 .copy{margin-top:8px;font-size:12px;color:#c4c8cf}
+.pcard{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:2px solid #0e7a3d}
+.pcard .pk{font-weight:800;font-size:15px;margin-bottom:2px}
+.pcard .pp{color:#0e7a3d;font-weight:800;font-size:18px;margin-bottom:8px}
+.step{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}
+.stepn{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:#0e7a3d;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px}
+.step .meta{font-size:13px;line-height:1.45}
 .scard{display:block;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 0 0 2px #f59e0b inset,0 1px 3px rgba(0,0,0,.07);position:relative;text-decoration:none;color:#111}
 .scbadge{position:absolute;top:8px;left:8px;background:#f59e0b;color:#111;font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .scard .sgimg{width:100%;aspect-ratio:16/10;object-fit:cover;display:block}
@@ -193,11 +200,42 @@ h2{font-size:18px;margin-bottom:4px}
       <div class="thumb g0" style="font-size:30px">👤</div>
       <div class="info"><div class="title" id="acc-name" style="font-size:16px"></div><div class="meta" id="acc-phone"></div></div>
     </div>
+    <div id="pro-box" style="margin-top:12px"></div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
       <button class="btn line" onclick="showMine()">📋 Mes annonces</button>
       <button class="btn gray" onclick="doLogout()">Se déconnecter</button>
     </div>
-    <p class="note">Les comptes Pro et boutiques arrivent bientôt 😉</p>
+  </section>
+
+  <section id="page-boost" hidden>
+    <button class="back" onclick="showMine()">← Retour</button>
+    <h2>🚀 Booster mon annonce</h2>
+    <p class="note" style="text-align:left" id="boost-which"></p>
+    <div class="pcard" onclick="buyBoost('boost7')">
+      <div class="pk">🔥 Coup de pouce — 7 jours</div>
+      <div class="pp">3 000 Ar</div>
+      <div class="meta">Ton annonce remontée en tête de l'accueil + badge 🔥 pendant 7 jours.</div>
+    </div>
+    <div class="pcard" onclick="buyBoost('boost30')">
+      <div class="pk">🔥 Coup de pouce — 30 jours</div>
+      <div class="pp">10 000 Ar</div>
+      <div class="meta">Le meilleur rapport durée / prix.</div>
+    </div>
+    <p class="note">Paiement par MVola puis validation (généralement sous quelques heures).</p>
+  </section>
+
+  <section id="page-pay" hidden>
+    <button class="back" onclick="showMine()">← Retour</button>
+    <h2>💰 Finalise ton paiement</h2>
+    <div class="pcard">
+      <div class="pk" id="pay-what"></div>
+      <div class="pp" id="pay-amount"></div>
+      <div class="step"><div class="stepn">1</div><div class="meta">Ouvre <b>MVola</b> → « Envoyer de l'argent »</div></div>
+      <div class="step"><div class="stepn">2</div><div class="meta">Envoie exactement le montant au <b>034 39 949 07</b></div></div>
+      <div class="step"><div class="stepn">3</div><div class="meta">Envoie la capture sur WhatsApp avec ta référence <b id="pay-ref"></b></div></div>
+      <a id="pay-wa" class="btn green" target="_blank" href="#">💬 Envoyer ma preuve sur WhatsApp</a>
+    </div>
+    <button class="btn line" onclick="showMine();toast('⏳ Paiement reçu — validation en cours')">✅ J'ai envoyé le paiement</button>
   </section>
 
   <section id="page-sell" hidden>
@@ -276,10 +314,13 @@ h2{font-size:18px;margin-bottom:4px}
 const SB_URL="https://wisourxbnsnmsfgrskhv.supabase.co";
 const SB_KEY="sb_publishable_0mt79uNrwTZCeU1BxPQwaw_5NWpPo_V";
 const API=SB_URL+"/rest/v1/ads";
+const PAY_PHONE="034 39 949 07";
+const PAY_WA="261343994907";
 
 const $=s=>document.querySelector(s);
 const CATS=["Téléphones","Informatique","Véhicules","Immobilier","Maison","Mode","Emploi","Divers"];
 const CATC={"Téléphones":["#dbeafe","#1d4ed8"],"Informatique":["#ede9fe","#6d28d9"],"Véhicules":["#fee2e2","#b91c1c"],"Immobilier":["#d1fae5","#047857"],"Maison":["#fef3c7","#b45309"],"Mode":["#fce7f3","#be185d"],"Emploi":["#e0e7ff","#4338ca"],"Divers":["#f3f4f6","#4b5563"]};
+const KINDL={boost7:"Coup de pouce 7 jours",boost30:"Coup de pouce 30 jours",pro1:"Compte Pro — 1 mois"};
 const INFO={
 about:{t:"À propos de BazarMada",b:"BazarMada est la marketplace 100 % malgache 🇲🇬<br><br>Crée ton compte gratuitement, publie tes annonces et contacte directement les vendeurs, partout dans l'île. Simple, léger, pensé pour les petites connexions."},
 contact:{t:"Nous contacter",b:"Une question, un problème, une suggestion ?<br><br>📧 <a href=\"mailto:tomainazo@gmail.com\" style=\"color:#0e7a3d;font-weight:700\">tomainazo@gmail.com</a><br>📞 <a href=\"tel:+261343994907\" style=\"color:#0e7a3d;font-weight:700\">034 39 949 07</a><br>💬 <a href=\"https://wa.me/261343994907\" target=\"_blank\" style=\"color:#0e7a3d;font-weight:700\">Écrire sur WhatsApp</a><br><br>📈 <b>Régie publicitaire</b><br>Vous êtes une marque et souhaitez être visible sur BazarMada ? Contactez-nous au même numéro — votre bannière devant des milliers d'acheteurs malgaches."},
@@ -302,6 +343,7 @@ let ads=[],currentCat="Tout",query="",online=false,fresh=[],photoFile=null,curre
 let heroes=[],cards=[],currentHero=null,cardIdx=0;
 let view=localStorage.getItem("mm_view")||"grid";
 let authMode="signup";
+let boostAd=null,lastPay=null;
 
 /* ===== 🔐 Session ===== */
 let sess=null;
@@ -351,15 +393,67 @@ else toast("⚠️ "+m);
 btn.disabled=false;btn.textContent=authMode==="signup"?"Créer mon compte":"Se connecter";
 }
 
+function isPro(){return !!(sess&&sess.pro_until&&new Date(sess.pro_until)>new Date());}
+
 function renderAccount(){
 if(!sess)return;
-document.getElementById("acc-name").textContent=sess.name||"Vendeur BazarMada";
+document.getElementById("acc-name").textContent=(sess.name||"Vendeur BazarMada")+(isPro()?" ⭐":"");
 document.getElementById("acc-phone").textContent="☎️ "+fmtPhone(sess.phone||"");
+const pb=document.getElementById("pro-box");
+if(isPro()){
+pb.innerHTML='<div class="card" style="border:2px solid #0e7a3d"><div class="info"><div class="title">⭐ Compte Pro actif</div><div class="meta">Jusqu\'au '+new Date(sess.pro_until).toLocaleDateString("fr-FR")+' — merci pour ton soutien !</div></div></div>';
+}else{
+pb.innerHTML='<button class="btn line" onclick="goPro()">⭐ Passer Pro — 25 000 Ar / mois</button>';
+}
 }
 
 function doLogout(){saveSess(null);myServer=[];show("page-home");toast("Déconnecté 👋");}
 function goSell(){if(!sess){toggleAuthMode("signup");show("page-auth");toast("Crée ton compte gratuit pour publier (1 min)");}else show("page-sell");}
-function goAccount(){if(!sess){toggleAuthMode("login");show("page-auth");}else{renderAccount();show("page-account");}}
+function goAccount(){
+if(!sess){toggleAuthMode("login");show("page-auth");return;}
+(async()=>{
+try{const ok=await rpc("me_seller",{p_token:sess.token});if(ok&&ok.token)saveSess(ok);}catch(e){}
+renderAccount();show("page-account");
+})();
+}
+
+/* ===== 💰 Boost & Pro ===== */
+function openBoost(id){
+boostAd=myServer.find(a=>a.id===id);
+if(!boostAd)return;
+document.getElementById("boost-which").innerHTML='Annonce : <b>'+esc(boostAd.title)+'</b>';
+show("page-boost");
+}
+
+async function buyBoost(kind){
+if(!sess||!boostAd)return;
+try{
+toast("Création de la commande…");
+const d=await rpc("create_payment",{p_token:sess.token,p_kind:kind,p_ad_id:boostAd.id});
+openPay(kind,d.payment_id,d.amount);
+}catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+}
+
+async function goPro(){
+if(!sess)return;
+try{
+const d=await rpc("create_payment",{p_token:sess.token,p_kind:"pro1"});
+openPay("pro1",d.payment_id,d.amount);
+}catch(e){
+const m=String(e.message||e);
+toast(m.indexOf("deja")>=0?"⭐ Tu es déjà Pro !":"⚠️ "+m);
+}
+}
+
+function openPay(kind,pid,amount){
+lastPay={kind:kind,pid:pid};
+document.getElementById("pay-what").textContent=KINDL[kind]||kind;
+document.getElementById("pay-amount").textContent=fmt(amount);
+document.getElementById("pay-ref").textContent="#"+pid;
+const msg="Bonjour BazarMada ! Je viens de payer "+fmt(amount)+" par MVola pour : "+(KINDL[kind]||kind)+(boostAd&&kind!=="pro1"?" — Annonce : "+boostAd.title:"")+". Référence #"+pid+". Voici la capture MVola 👇";
+document.getElementById("pay-wa").href="https://wa.me/"+PAY_WA+"?text="+encodeURIComponent(msg);
+show("page-pay");
+}
 
 /* ===== Utilitaires ===== */
 function saveMine(){localStorage.setItem("mm_ads",JSON.stringify(mine));}
@@ -368,6 +462,7 @@ function fmt(n){return new Intl.NumberFormat("fr-FR").format(n)+" Ar";}
 function grad(a){return "g"+(a.id%5);}
 function esc(s){return String(s).replace(/</g,"&lt;").replace(/"/g,"&quot;");}
 function badge(c){const x=CATC[c]||CATC["Divers"];return '<span class="cbadge" style="background:'+x[0]+';color:'+x[1]+'">'+esc(c)+'</span>';}
+function isBoosted(a){return !!(a.boosted_until&&new Date(a.boosted_until)>new Date());}
 function show(id){
 document.querySelectorAll("main section").forEach(s=>s.hidden=(s.id!==id));
 const h=$("#hero");
@@ -391,13 +486,13 @@ function renderSkeletons(){
 }
 
 function card(a){
-return '<div class="card" onclick="openDetail('+a.id+')">'+thumbHTML(a,false)+
+return '<div class="card" onclick="openDetail('+a.id+')">'+thumbHTML(a,false)+(isBoosted(a)?'<span class="fire">🔥</span>':'')+
 '<div class="info"><div class="title">'+esc(a.title)+'</div><div class="price">'+fmt(a.price)+'</div><div class="meta">📍 '+esc(a.city)+' · '+esc(a.cat)+'</div></div>'+
 '<button class="heart '+(favs.has(a.id)?"on":"")+'" onclick="event.stopPropagation();toggleFav('+a.id+')">♥</button></div>';
 }
 
 function gcard(a){
-return '<div class="gcard" onclick="openDetail('+a.id+')">'+gthumbHTML(a)+
+return '<div class="gcard" onclick="openDetail('+a.id+')">'+(isBoosted(a)?'<span class="fire">🔥</span>':'')+gthumbHTML(a)+
 '<div class="ginfo"><div class="gtitle">'+esc(a.title)+'</div>'+
 '<div class="price" style="font-size:14px;margin-bottom:2px">'+fmt(a.price)+'</div>'+
 '<div class="meta">📍 '+esc(a.city)+'</div></div>'+
@@ -474,7 +569,7 @@ function openDetail(id){
 const a=ads.find(x=>x.id===id);if(!a)return;
 currentAd=a;
  $("#d-thumb").innerHTML=thumbHTML(a,true);
- $("#d-cat").innerHTML=badge(a.cat);
+ $("#d-cat").innerHTML=badge(a.cat)+(isBoosted(a)?' <span class="cbadge" style="background:#fde68a;color:#92400e">🔥 Mis en avant</span>':"");
  $("#d-title").textContent=a.title;
  $("#d-price").textContent=fmt(a.price);
 const d=a.created_at?new Date(a.created_at).toLocaleDateString("fr-FR"):a.date;
@@ -500,7 +595,16 @@ if(!sess){toggleAuthMode("login");show("page-auth");toast("Connecte-toi pour voi
 }
 
 function renderMine(){
-const rows=myServer.map(a=>'<div class="card">'+thumbHTML(a,false)+'<div class="info"><div class="title">'+esc(a.title)+'</div><div class="price">'+fmt(a.price)+'</div><div class="meta">📍 '+esc(a.city)+' · '+esc(a.cat)+'</div></div><button class="heart" style="position:static;font-size:22px" onclick="delAd('+a.id+')">🗑️</button></div>').join("");
+const rows=myServer.map(a=>{
+const boosted=isBoosted(a);
+return '<div class="card">'+thumbHTML(a,false)+(boosted?'<span class="fire">🔥</span>':'')+
+'<div class="info"><div class="title">'+esc(a.title)+'</div><div class="price">'+fmt(a.price)+'</div>'+
+'<div class="meta">📍 '+esc(a.city)+' · '+esc(a.cat)+(boosted?' · 🔥 jusqu\'au '+new Date(a.boosted_until).toLocaleDateString("fr-FR"):'')+'</div></div>'+
+'<div style="display:flex;flex-direction:column;gap:6px;flex:0 0 auto">'+
+'<button class="btn line" style="padding:7px 10px;font-size:12px" onclick="openBoost('+a.id+')">🚀 Booster</button>'+
+'<button class="btn gray" style="padding:7px 10px;font-size:12px" onclick="delAd('+a.id+')">🗑️</button>'+
+'</div></div>';
+}).join("");
 const pend=mine.map(a=>'<div class="card">'+thumbHTML(a,false)+'<div class="info"><div class="title">'+esc(a.title)+' <span style="color:#f59e0b;font-weight:700">⏳ en attente</span></div><div class="price">'+fmt(a.price)+'</div><div class="meta">📍 '+esc(a.city)+' · '+esc(a.cat)+'</div></div><button class="heart" style="position:static;font-size:22px" onclick="delAd('+a.id+')">🗑️</button></div>').join("");
  $("#mine-list").innerHTML=(rows+pend)||'<div class="empty"><div class="eicon">📋</div>Aucune annonce pour l\'instant.<br>Appuie sur le gros bouton ＋ pour vendre ton premier article !</div>';
 }
@@ -615,7 +719,7 @@ catch(e){myServer=[];}
 async function loadAds(){
 renderSkeletons();
 try{
-const r=await fetch(API+"?select=*&status=eq.active&order=created_at.desc",{headers:{apikey:SB_KEY}});
+const r=await fetch(API+"?select=*&status=eq.active&order=boosted_until.desc.nullslast,created_at.desc",{headers:{apikey:SB_KEY}});
 if(!r.ok)throw new Error("HTTP "+r.status);
 publicAds=[...fresh,...(await r.json())];
 online=true;
