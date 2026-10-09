@@ -114,6 +114,17 @@ h2{font-size:18px;margin-bottom:4px}
 .sfoot{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .sspace{font-size:11px;color:#9ca3af}
 .sbtn{background:#f59e0b;color:#111;font-weight:800;font-size:12px;padding:8px 12px;border-radius:10px;display:inline-block}
+.chatrow{display:flex;gap:12px;align-items:center;background:#fff;border-radius:14px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.avatar{width:48px;height:48px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:18px;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.cwrap{display:flex;flex-direction:column;height:calc(100vh - 230px)}
+.cmsgs{flex:1;overflow-y:auto;padding:4px 2px 10px}
+.cmsg{max-width:80%;padding:9px 12px;border-radius:14px;margin-bottom:6px;font-size:14px;line-height:1.35;word-wrap:break-word}
+.cmine{background:#0e7a3d;color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+.ctheir{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08);border-bottom-left-radius:4px}
+.ctime{font-size:10px;opacity:.7;margin-top:2px}
+.cinput{display:flex;gap:8px;padding-top:8px}
+.cinput input{flex:1}
 #install{position:fixed;left:12px;right:12px;bottom:92px;background:#0e7a3d;color:#fff;border-radius:16px;padding:14px;display:none;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.25);align-items:center;gap:10px}
 #install .txt{flex:1;font-size:13px;line-height:1.35}
 #install .txt b{font-size:14px;display:block;margin-bottom:2px}
@@ -145,6 +156,7 @@ h2{font-size:18px;margin-bottom:4px}
   <div class="hrow">
     <div class="logo">Bazar<span>Mada</span></div>
     <div class="vbtns">
+      <button class="rbtn" onclick="openChats()">💬</button>
       <button id="v-grid" class="rbtn on" onclick="setView('grid')">⊞</button>
       <button id="v-list" class="rbtn" onclick="setView('list')">☰</button>
       <button id="refresh" class="rbtn">🔄</button>
@@ -176,6 +188,7 @@ h2{font-size:18px;margin-bottom:4px}
       <a id="d-call" class="btn green" href="tel:">📞 Appeler</a>
       <a id="d-wa" class="btn line" target="_blank" href="#">💬 WhatsApp</a>
     </div>
+    <button id="d-chat" class="btn green" style="margin-top:10px" onclick="startChatFromDetail()">💬 Discuter dans l'app (discret)</button>
     <button class="btn gray" style="margin-top:10px" onclick="shareAd()">📤 Partager cette annonce</button>
     <p class="note">⚠️ Sécurité : rencontre le vendeur en journée, vérifie l'article avant de payer, ne verse jamais d'acompte à un inconnu.</p>
   </section>
@@ -198,11 +211,13 @@ h2{font-size:18px;margin-bottom:4px}
   <section id="page-account" hidden>
     <button class="back" onclick="show('page-home')">← Retour</button>
     <div class="card" style="align-items:center">
-      <div class="thumb g0" style="font-size:30px">👤</div>
-      <div class="info"><div class="title" id="acc-name" style="font-size:16px"></div><div class="meta" id="acc-phone"></div></div>
+      <div id="acc-photo" class="thumb g0" style="width:64px;height:64px;font-size:26px;cursor:pointer" onclick="document.getElementById('acc-img').click()">👤</div>
+      <div class="info"><div class="title" id="acc-name" style="font-size:16px"></div><div class="meta" id="acc-phone"></div><div class="meta" style="color:#0e7a3d;font-weight:700">📷 Touche la photo pour la changer</div></div>
     </div>
+    <input type="file" id="acc-img" accept="image/*" hidden>
     <div id="pro-box" style="margin-top:12px"></div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+      <button class="btn line" onclick="openChats()">💬 Mes discussions</button>
       <button class="btn line" onclick="showMine()">📋 Mes annonces</button>
       <button class="btn gray" onclick="doLogout()">Se déconnecter</button>
     </div>
@@ -284,6 +299,24 @@ h2{font-size:18px;margin-bottom:4px}
     <p class="note" style="text-align:left">⌛ Les annonces vivent 45 jours. Après, elles restent ici — renouvelle-les gratuitement en 1 clic.</p>
     <div id="mine-list" style="margin-top:12px"></div>
   </section>
+
+  <section id="page-chats" hidden>
+    <button class="back" onclick="show('page-home')">← Retour</button>
+    <h2>💬 Discussions</h2>
+    <div id="chats-list" style="margin-top:12px"></div>
+  </section>
+
+  <section id="page-chat" hidden>
+    <button class="back" onclick="show('page-chats')">← Discussions</button>
+    <div id="chat-head" style="margin-bottom:8px"></div>
+    <div class="cwrap">
+      <div class="cmsgs" id="cmsgs"></div>
+      <div class="cinput">
+        <input id="cbody" maxlength="1000" placeholder="Écris ton message…" autocomplete="off">
+        <button class="btn green" style="width:auto;padding:11px 16px" onclick="sendChat()">➤</button>
+      </div>
+    </div>
+  </section>
 </main>
 
 <nav class="bottom">
@@ -324,7 +357,7 @@ const CATS=["Téléphones","Informatique","Véhicules","Immobilier","Maison","Mo
 const CATC={"Téléphones":["#dbeafe","#1d4ed8"],"Informatique":["#ede9fe","#6d28d9"],"Véhicules":["#fee2e2","#b91c1c"],"Immobilier":["#d1fae5","#047857"],"Maison":["#fef3c7","#b45309"],"Mode":["#fce7f3","#be185d"],"Emploi":["#e0e7ff","#4338ca"],"Divers":["#f3f4f6","#4b5563"]};
 const KINDL={boost7:"Coup de pouce 7 jours",boost30:"Coup de pouce 30 jours",pro1:"Compte Pro — 1 mois"};
 const INFO={
-about:{t:"À propos de BazarMada",b:"BazarMada est la marketplace 100 % malgache 🇲🇬<br><br>Crée ton compte gratuitement, publie tes annonces et contacte directement les vendeurs, partout dans l'île. Simple, léger, pensé pour les petites connexions."},
+about:{t:"À propos de BazarMada",b:"BazarMada est la marketplace 100 % malgache 🇲🇬<br><br>Crée ton compte gratuitement, publie tes annonces et discute directement avec les vendeurs — dans l'app, en toute discrétion."},
 contact:{t:"Nous contacter",b:"Une question, un problème, une suggestion ?<br><br>📧 <a href=\"mailto:tomainazo@gmail.com\" style=\"color:#0e7a3d;font-weight:700\">tomainazo@gmail.com</a><br>📞 <a href=\"tel:+261343994907\" style=\"color:#0e7a3d;font-weight:700\">034 39 949 07</a><br>💬 <a href=\"https://wa.me/261343994907\" target=\"_blank\" style=\"color:#0e7a3d;font-weight:700\">Écrire sur WhatsApp</a><br><br>📈 <b>Régie publicitaire</b><br>Vous êtes une marque et souhaitez être visible sur BazarMada ? Contactez-nous au même numéro — votre bannière devant des milliers d'acheteurs malgaches."},
 secu:{t:"Conseils sécurité",b:"• Rencontrez le vendeur en journée, dans un lieu public<br>• Vérifiez l'article avant de payer<br>• Ne versez jamais d'acompte à un inconnu<br>• Méfiez-vous des prix trop beaux pour être vrais<br><br>Signalez toute annonce suspecte à nos contacts."}
 };
@@ -346,6 +379,7 @@ let heroes=[],cards=[],currentHero=null,cardIdx=0;
 let view=localStorage.getItem("mm_view")||"grid";
 let authMode="signup";
 let boostAd=null,lastPay=null;
+let chatId=null,chatRole=null,chatTimer=null,lastChatJson="";
 
 /* ===== 🔐 Session ===== */
 let sess=null;
@@ -355,7 +389,7 @@ function normPhone(p){p=String(p).replace(/\D/g,"");if(p.length===12&&p.indexOf(
 async function rpc(name,args){
 const r=await fetch(SB_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(args)});
 const d=await r.json().catch(()=>({}));
-if(!r.ok)throw new Error(d.message||("HTTP "+r.status));
+if(!r.ok){const e=new Error(d.message||("HTTP "+r.status));e.server=true;throw e;}
 return d;
 }
 
@@ -401,11 +435,13 @@ function renderAccount(){
 if(!sess)return;
 document.getElementById("acc-name").textContent=(sess.name||"Vendeur BazarMada")+(isPro()?" ⭐":"");
 document.getElementById("acc-phone").textContent="☎️ "+fmtPhone(sess.phone||"");
+const ap=document.getElementById("acc-photo");
+ap.innerHTML=sess.photo_url?'<img src="'+esc(sess.photo_url)+'" alt="" style="width:100%;height:100%;object-fit:cover">':"👤";
 const pb=document.getElementById("pro-box");
 if(isPro()){
 pb.innerHTML='<div class="card" style="border:2px solid #0e7a3d"><div class="info"><div class="title">⭐ Compte Pro actif</div><div class="meta">Jusqu\'au '+new Date(sess.pro_until).toLocaleDateString("fr-FR")+' — merci pour ton soutien !</div></div></div>';
 }else{
-pb.innerHTML='<button class="btn line" onclick="goPro()">⭐ Passer Pro — 25 000 Ar / mois</button>';
+pb.innerHTML='<div class="card"><div class="info"><div class="title">Compte gratuit</div><div class="meta">10 annonces actives max · passe Pro pour l\'illimité</div></div></div><button class="btn line" onclick="goPro()">⭐ Passer Pro — 25 000 Ar / mois</button>';
 }
 }
 
@@ -462,13 +498,14 @@ function saveMine(){localStorage.setItem("mm_ads",JSON.stringify(mine));}
 function saveFavs(){localStorage.setItem("mm_favs",JSON.stringify([...favs]));}
 function fmt(n){return new Intl.NumberFormat("fr-FR").format(n)+" Ar";}
 function grad(a){return "g"+(a.id%5);}
-function esc(s){return String(s).replace(/</g,"&lt;").replace(/"/g,"&quot;");}
+function esc(s){return String(s==null?"":s).replace(/</g,"&lt;").replace(/"/g,"&quot;");}
 function badge(c){const x=CATC[c]||CATC["Divers"];return '<span class="cbadge" style="background:'+x[0]+';color:'+x[1]+'">'+esc(c)+'</span>';}
 function isBoosted(a){return !!(a.boosted_until&&new Date(a.boosted_until)>new Date());}
 function isExpired(a){return !(a.expires_at==null||new Date(a.expires_at)>new Date());}
 function daysLeft(a){if(!a.expires_at)return null;const ms=new Date(a.expires_at)-new Date();return Math.max(0,Math.ceil(ms/86400000));}
 function show(id){
 document.querySelectorAll("main section").forEach(s=>s.hidden=(s.id!==id));
+if(id!=="page-chat")stopPoll();
 const h=$("#hero");
 if(id==="page-home"&&currentHero){h.hidden=false;}else{h.hidden=true;}
 window.scrollTo(0,0);
@@ -582,6 +619,7 @@ const d=a.created_at?new Date(a.created_at).toLocaleDateString("fr-FR"):a.date;
  $("#d-desc").textContent=a.description||a.desc||"";
  $("#d-call").href="tel:+"+waNum(a.phone||"");
  $("#d-wa").href="https://wa.me/"+waNum(a.phone||"")+"?text="+encodeURIComponent("Bonjour ! Je suis intéressé par votre annonce : "+a.title);
+ $("#d-chat").hidden=!a.owner_id;
 show("page-detail");
 }
 
@@ -591,6 +629,86 @@ const txt=currentAd.title+" — "+fmt(currentAd.price)+" — à voir sur BazarMa
 const url=location.origin;
 if(navigator.share){try{await navigator.share({title:"BazarMada",text:txt,url});}catch(e){}}
 else{window.open("https://wa.me/?text="+encodeURIComponent(txt+" "+url),"_blank");}
+}
+
+/* ===== 💬 Chat ===== */
+function buyerTok(){
+let t=localStorage.getItem("mm_buyer");
+if(!t){t=(crypto.randomUUID?crypto.randomUUID():("b"+Date.now()+"_"+Math.random().toString(36).slice(2)));localStorage.setItem("mm_buyer",t);}
+return t;
+}
+
+async function startChatFromDetail(){
+if(!currentAd)return;
+if(!currentAd.owner_id){toast("Ancienne annonce : contacte le vendeur par téléphone");return;}
+let name=localStorage.getItem("mm_buyername")||"";
+if(!name){name=prompt("Ton prénom (pour que le vendeur te reconnaisse) — facultatif :")||"";}
+if(name)localStorage.setItem("mm_buyername",name);
+try{
+const d=await rpc("start_chat",{p_ad_id:currentAd.id,p_buyer_token:buyerTok(),p_name:name});
+openChat(d.chat_id);
+}catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+}
+
+async function openChats(){
+try{
+const d=sess?await rpc("my_chats",{p_token:sess.token}):await rpc("my_chats",{p_buyer_token:buyerTok()});
+const list=Array.isArray(d)?d:[];
+ $("#chats-list").innerHTML=list.length?list.map(c=>
+'<div class="chatrow" onclick="openChat('+c.id+')"><div class="avatar g2">💬</div>'+
+'<div class="info"><div class="title">'+esc(c.ad_title||"Annonce")+'</div>'+
+'<div class="meta">'+esc(c.other||"")+'</div>'+
+'<div class="meta" style="color:#0e7a3d;font-weight:700">'+esc(c.last_msg||"Nouvelle discussion")+'</div></div>'+
+'<div class="meta" style="flex:0 0 auto">'+(c.last_at?new Date(c.last_at).toLocaleDateString("fr-FR"):"")+'</div></div>'
+).join(""):'<div class="empty"><div class="eicon">💬</div>Aucune discussion.<br>Elles apparaissent quand un acheteur t\'écrit — ou quand tu écris à un vendeur depuis une annonce.</div>';
+show("page-chats");
+}catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+}
+
+async function openChat(id){
+chatId=id;
+try{
+const c=await rpc("get_chat",{p_chat_id:id,p_buyer_token:buyerTok(),p_seller_token:(sess?sess.token:null)});
+chatRole=c.role||"buyer";
+lastChatJson=JSON.stringify(c);
+renderChatInner(c);
+startPoll();
+}catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+}
+
+function renderChatInner(c){
+ $("#chat-head").innerHTML='<div class="title">'+esc(c.ad_title||"")+'</div><div class="meta">'+(chatRole==="buyer"?"Vendeur : "+esc(c.seller_name||""):"Acheteur : "+esc(c.buyer_name||""))+'</div>';
+const msgs=c.msgs||[];
+ $("#cmsgs").innerHTML=msgs.map(m=>{
+const mine=(chatRole==="buyer"&&m.sender==="buyer")||(chatRole==="seller"&&m.sender==="seller");
+return '<div class="cmsg '+(mine?"cmine":"ctheir")+'">'+esc(m.body)+
+'<div class="ctime">'+(m.at?new Date(m.at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"")+'</div></div>';
+}).join("")||'<div class="empty">Démarre la conversation 👋</div>';
+const box=$("#cmsgs");box.scrollTop=box.scrollHeight;
+show("page-chat");
+}
+
+function startPoll(){stopPoll();chatTimer=setInterval(refreshChat,4000);}
+function stopPoll(){if(chatTimer){clearInterval(chatTimer);chatTimer=null;}}
+async function refreshChat(){
+if(!chatId)return;
+try{
+const c=await rpc("get_chat",{p_chat_id:chatId,p_buyer_token:buyerTok(),p_seller_token:(sess?sess.token:null)});
+const j=JSON.stringify(c);
+if(j!==lastChatJson){lastChatJson=j;renderChatInner(c);}
+}catch(e){}
+}
+
+async function sendChat(){
+const inp=$("#cbody");
+const body=inp.value.trim();
+if(!body||!chatId)return;
+inp.value="";
+try{
+if(chatRole==="buyer")await rpc("send_msg",{p_chat_id:chatId,p_body:body,p_buyer_token:buyerTok()});
+else await rpc("send_msg",{p_chat_id:chatId,p_body:body,p_seller_token:sess.token});
+await refreshChat();
+}catch(e){toast("⚠️ "+(e.message||"Envoi impossible"));inp.value=body;}
 }
 
 function showMine(){
@@ -698,6 +816,19 @@ else{photoFile=null;p.hidden=true;}
  $("#photo-cam").addEventListener("change",pickPhoto);
  $("#photo-gal").addEventListener("change",pickPhoto);
 
+ $("#acc-img").addEventListener("change",async e=>{
+const f=e.target.files[0];
+if(!f||!sess)return;
+toast("📷 Envoi de la photo…");
+try{
+const url=await uploadPhoto(f);
+const d=await rpc("set_my_photo",{p_token:sess.token,p_url:url});
+sess.photo_url=d.photo_url;saveSess(sess);
+renderAccount();toast("✅ Photo de profil mise à jour");
+}catch(err){toast("⚠️ "+(err.message||"Erreur"));}
+e.target.value="";
+});
+
 async function publishAd(a){
 return await rpc("publish_ad",{p_token:sess.token,p_title:a.title,p_price:a.price,p_cat:a.cat,p_city:a.city,p_description:a.description,p_emoji:a.emoji,p_phone:a.phone,p_photo:a.photo_url||null});
 }
@@ -716,10 +847,13 @@ ads=[...publicAds,...mine];
 render();show("page-home");
 toast("✅ Annonce publiée — vivante 45 jours !");
 }catch(err){
+if(err&&err.server){toast("⚠️ "+err.message);}
+else{
 mine.unshift({...ad,id:Date.now(),date:new Date().toLocaleDateString("fr-FR"),pending:true});
 saveMine();ads=[...publicAds,...mine];
 render();show("page-home");
 toast("📡 Pas de connexion — enregistrée sur ton téléphone");
+}
 }
 photoFile=null;f.reset();
  $("#photo-preview").hidden=true;
@@ -787,12 +921,13 @@ const form=$("#sell-form");
 ["📱","💻","🚗","🏍️","🏠","🛋️","👗","🐂","🌾","📦"].forEach(em=>{
 const b=document.createElement("button");
 b.type="button";b.className="em"+(em==="📦"?" on":"");b.textContent=em;
-b.onclick=()=>{form.emoji.value=em;document.querySelectorAll(".em").forEach(x=>x.classList.toggle("on",x.textContent==="📦"));b.classList.add("on");};
+b.onclick=()=>{form.emoji.value=em;document.querySelectorAll(".em").forEach(x=>x.classList.remove("on"));b.classList.add("on");};
  $("#emoji-pick").appendChild(b);
 });
 
  $("#search").addEventListener("input",e=>{query=e.target.value.toLowerCase();render();});
  $("#refresh").onclick=async()=>{$("#refresh").textContent="⏳";await loadAds();$("#refresh").textContent="🔄";toast("✅ Annonces actualisées");};
+ $("#cbody").addEventListener("keydown",e=>{if(e.key==="Enter")sendChat();});
 
 (async function init(){
 document.getElementById("v-grid").className="rbtn"+(view==="grid"?" on":"");
