@@ -455,6 +455,14 @@ renderAccount();show("page-account");
 })();
 }
 
+/* ===== Signalement ===== */
+async function reportCurrent(){
+if(!currentAd)return;
+const r=prompt("Pourquoi signaler cette annonce ? (arnaque, produit interdit, faux...)");
+if(!r||r.trim().length<3)return;
+try{await rpc("report_ad",{p_ad_id:currentAd.id,p_reason:r.trim()});toast("Signalement envoye. Merci !");}
+catch(e){toast(e.message||"Erreur");}
+}
 /* ===== 💰 Boost & Pro ===== */
 function openBoost(id){
 boostAd=myServer.find(a=>a.id===id);
