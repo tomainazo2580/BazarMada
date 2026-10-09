@@ -117,13 +117,13 @@ h2{font-size:18px;margin-bottom:4px}
 .chatrow{display:flex;gap:12px;align-items:center;background:#fff;border-radius:14px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
 .avatar{width:48px;height:48px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:18px;overflow:hidden}
 .avatar img{width:100%;height:100%;object-fit:cover}
-.cwrap{display:flex;flex-direction:column;height:calc(100vh - 230px)}
+.cwrap{display:flex;flex-direction:column;height:calc(100dvh - 200px);min-height:320px}
 .cmsgs{flex:1;overflow-y:auto;padding:4px 2px 10px}
 .cmsg{max-width:80%;padding:9px 12px;border-radius:14px;margin-bottom:6px;font-size:14px;line-height:1.35;word-wrap:break-word}
 .cmine{background:#0e7a3d;color:#fff;margin-left:auto;border-bottom-right-radius:4px}
 .ctheir{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08);border-bottom-left-radius:4px}
 .ctime{font-size:10px;opacity:.7;margin-top:2px}
-.cinput{display:flex;gap:8px;padding-top:8px}
+.cinput{display:flex;gap:8px;padding-top:8px;position:sticky;bottom:0;background:#f3f4f6}
 .cinput input{flex:1}
 #install{position:fixed;left:12px;right:12px;bottom:92px;background:#0e7a3d;color:#fff;border-radius:16px;padding:14px;display:none;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.25);align-items:center;gap:10px}
 #install .txt{flex:1;font-size:13px;line-height:1.35}
@@ -162,7 +162,7 @@ h2{font-size:18px;margin-bottom:4px}
       <button id="refresh" class="rbtn">🔄</button>
     </div>
   </div>
-  <div class="tag">Acheter &amp; vendre partout à Madagasikara 🇲🇬</div>
+  <div class="tag">Acheter et vendre partout à Madagascar</div>
   <input id="search" type="search" placeholder="Rechercher un article, une ville…">
 </header>
 
@@ -190,7 +190,7 @@ h2{font-size:18px;margin-bottom:4px}
     </div>
     <button id="d-chat" class="btn green" style="margin-top:10px" onclick="startChatFromDetail()">💬 Discuter dans l'app (discret)</button>
     <button class="btn gray" style="margin-top:10px" onclick="shareAd()">📤 Partager cette annonce</button>
-    <p class="note">⚠️ Sécurité : rencontre le vendeur en journée, vérifie l'article avant de payer, ne verse jamais d'acompte à un inconnu.</p>
+    <p class="note">Sécurité : rencontrez le vendeur en journée, vérifiez l'article avant de payer, ne versez jamais d'acompte à un inconnu.</p>
   </section>
 
   <section id="page-auth" hidden>
@@ -212,7 +212,7 @@ h2{font-size:18px;margin-bottom:4px}
     <button class="back" onclick="show('page-home')">← Retour</button>
     <div class="card" style="align-items:center">
       <div id="acc-photo" class="thumb g0" style="width:64px;height:64px;font-size:26px;cursor:pointer" onclick="document.getElementById('acc-img').click()">👤</div>
-      <div class="info"><div class="title" id="acc-name" style="font-size:16px"></div><div class="meta" id="acc-phone"></div><div class="meta" style="color:#0e7a3d;font-weight:700">📷 Touche la photo pour la changer</div></div>
+      <div class="info"><div class="title" id="acc-name" style="font-size:16px"></div><div class="meta" id="acc-phone"></div><div class="meta" style="color:#0e7a3d;font-weight:700">Touche la photo pour la changer</div></div>
     </div>
     <input type="file" id="acc-img" accept="image/*" hidden>
     <div id="pro-box" style="margin-top:12px"></div>
@@ -225,15 +225,15 @@ h2{font-size:18px;margin-bottom:4px}
 
   <section id="page-boost" hidden>
     <button class="back" onclick="showMine()">← Retour</button>
-    <h2>🚀 Booster mon annonce</h2>
+    <h2>Booster mon annonce</h2>
     <p class="note" style="text-align:left" id="boost-which"></p>
     <div class="pcard" onclick="buyBoost('boost7')">
-      <div class="pk">🔥 Coup de pouce — 7 jours</div>
+      <div class="pk">Coup de pouce — 7 jours</div>
       <div class="pp">3 000 Ar</div>
-      <div class="meta">Ton annonce remontée en tête de l'accueil + badge 🔥 pendant 7 jours.</div>
+      <div class="meta">Ton annonce remontée en tête de l'accueil avec badge 🔥 pendant 7 jours.</div>
     </div>
     <div class="pcard" onclick="buyBoost('boost30')">
-      <div class="pk">🔥 Coup de pouce — 30 jours</div>
+      <div class="pk">Coup de pouce — 30 jours</div>
       <div class="pp">10 000 Ar</div>
       <div class="meta">Le meilleur rapport durée / prix.</div>
     </div>
@@ -242,7 +242,7 @@ h2{font-size:18px;margin-bottom:4px}
 
   <section id="page-pay" hidden>
     <button class="back" onclick="showMine()">← Retour</button>
-    <h2>💰 Finalise ton paiement</h2>
+    <h2>Finalise ton paiement</h2>
     <div class="pcard">
       <div class="pk" id="pay-what"></div>
       <div class="pp" id="pay-amount"></div>
@@ -251,7 +251,7 @@ h2{font-size:18px;margin-bottom:4px}
       <div class="step"><div class="stepn">3</div><div class="meta">Envoie la capture sur WhatsApp avec ta référence <b id="pay-ref"></b></div></div>
       <a id="pay-wa" class="btn green" target="_blank" href="#">💬 Envoyer ma preuve sur WhatsApp</a>
     </div>
-    <button class="btn line" onclick="showMine();toast('⏳ Paiement reçu — validation en cours')">✅ J'ai envoyé le paiement</button>
+    <button class="btn line" onclick="showMine();toast('Paiement reçu — validation en cours')">J'ai envoyé le paiement</button>
   </section>
 
   <section id="page-sell" hidden>
@@ -296,13 +296,13 @@ h2{font-size:18px;margin-bottom:4px}
   <section id="page-mine" hidden>
     <button class="back" onclick="show('page-account')">← Mon compte</button>
     <h2>Mes annonces</h2>
-    <p class="note" style="text-align:left">⌛ Les annonces vivent 45 jours. Après, elles restent ici — renouvelle-les gratuitement en 1 clic.</p>
+    <p class="note" style="text-align:left">Les annonces vivent 45 jours. Après, elles restent ici — renouvelle-les gratuitement en 1 clic.</p>
     <div id="mine-list" style="margin-top:12px"></div>
   </section>
 
   <section id="page-chats" hidden>
     <button class="back" onclick="show('page-home')">← Retour</button>
-    <h2>💬 Discussions</h2>
+    <h2>Discussions</h2>
     <div id="chats-list" style="margin-top:12px"></div>
   </section>
 
@@ -327,12 +327,12 @@ h2{font-size:18px;margin-bottom:4px}
 </nav>
 
 <div id="toast"></div>
-<div id="install"><div class="txt"><b>📲 Installer BazarMada</b>Plein écran, plus rapide, comme une vraie app</div><button class="go">Installer</button><button class="no">✕</button></div>
+<div id="install"><div class="txt"><b>Installer BazarMada</b>Plein écran, plus rapide, comme une vraie app</div><button class="go">Installer</button><button class="no">✕</button></div>
 
 <div id="welcome" hidden>
   <div class="w-logo">Bazar<span>Mada</span></div>
-  <div class="w-sub">Acheter &amp; vendre partout à Madagasikara 🇲🇬</div>
-  <div class="w-points">✅ Crée ton compte en 1 minute<br>📞 Contacte les vendeurs en direct<br>🇲🇬 100 % malgache, simple et léger</div>
+  <div class="w-sub">Acheter et vendre partout à Madagascar</div>
+  <div class="w-points">• Crée ton compte en 1 minute<br>• Contacte les vendeurs en direct<br>• Simple, léger, pensé pour Madagascar</div>
   <button class="w-go" onclick="startApp()">C'est parti !</button>
 </div>
 
@@ -357,8 +357,8 @@ const CATS=["Téléphones","Informatique","Véhicules","Immobilier","Maison","Mo
 const CATC={"Téléphones":["#dbeafe","#1d4ed8"],"Informatique":["#ede9fe","#6d28d9"],"Véhicules":["#fee2e2","#b91c1c"],"Immobilier":["#d1fae5","#047857"],"Maison":["#fef3c7","#b45309"],"Mode":["#fce7f3","#be185d"],"Emploi":["#e0e7ff","#4338ca"],"Divers":["#f3f4f6","#4b5563"]};
 const KINDL={boost7:"Coup de pouce 7 jours",boost30:"Coup de pouce 30 jours",pro1:"Compte Pro — 1 mois"};
 const INFO={
-about:{t:"À propos de BazarMada",b:"BazarMada est la marketplace 100 % malgache 🇲🇬<br><br>Crée ton compte gratuitement, publie tes annonces et discute directement avec les vendeurs — dans l'app, en toute discrétion."},
-contact:{t:"Nous contacter",b:"Une question, un problème, une suggestion ?<br><br>📧 <a href=\"mailto:tomainazo@gmail.com\" style=\"color:#0e7a3d;font-weight:700\">tomainazo@gmail.com</a><br>📞 <a href=\"tel:+261343994907\" style=\"color:#0e7a3d;font-weight:700\">034 39 949 07</a><br>💬 <a href=\"https://wa.me/261343994907\" target=\"_blank\" style=\"color:#0e7a3d;font-weight:700\">Écrire sur WhatsApp</a><br><br>📈 <b>Régie publicitaire</b><br>Vous êtes une marque et souhaitez être visible sur BazarMada ? Contactez-nous au même numéro — votre bannière devant des milliers d'acheteurs malgaches."},
+about:{t:"À propos de BazarMada",b:"BazarMada est la marketplace malgache.<br><br>Crée ton compte gratuitement, publie tes annonces et discute directement avec les vendeurs — dans l'app, en toute discrétion."},
+contact:{t:"Nous contacter",b:"Une question, un problème, une suggestion ?<br><br>📧 <a href=\"mailto:tomainazo@gmail.com\" style=\"color:#0e7a3d;font-weight:700\">tomainazo@gmail.com</a><br>📞 <a href=\"tel:+261343994907\" style=\"color:#0e7a3d;font-weight:700\">034 39 949 07</a><br>💬 <a href=\"https://wa.me/261343994907\" target=\"_blank\" style=\"color:#0e7a3d;font-weight:700\">Écrire sur WhatsApp</a><br><br><b>Régie publicitaire</b><br>Vous êtes une marque et souhaitez être visible sur BazarMada ? Contactez-nous au même numéro — votre marque en tête de l'accueil, devant des milliers d'acheteurs."},
 secu:{t:"Conseils sécurité",b:"• Rencontrez le vendeur en journée, dans un lieu public<br>• Vérifiez l'article avant de payer<br>• Ne versez jamais d'acompte à un inconnu<br>• Méfiez-vous des prix trop beaux pour être vrais<br><br>Signalez toute annonce suspecte à nos contacts."}
 };
 const DEMO=[
@@ -419,12 +419,12 @@ d=await rpc("login_seller",{p_phone:phone,p_pass:f.pass.value});
 saveSess(d);
 f.reset();
 renderAccount();show("page-sell");
-toast("✅ Bienvenue sur BazarMada !");
+toast("Bienvenue sur BazarMada !");
 }catch(err){
 const m=String(err.message||err);
-if(m.indexOf("deja")>=0)toast("📵 Ce numéro a déjà un compte — connecte-toi");
-else if(m.indexOf("incorrect")>=0)toast("❌ Téléphone ou mot de passe incorrect");
-else toast("⚠️ "+m);
+if(m.indexOf("deja")>=0)toast("Ce numéro a déjà un compte — connecte-toi");
+else if(m.indexOf("incorrect")>=0)toast("Téléphone ou mot de passe incorrect");
+else toast(m);
 }
 btn.disabled=false;btn.textContent=authMode==="signup"?"Créer mon compte":"Se connecter";
 }
@@ -439,13 +439,13 @@ const ap=document.getElementById("acc-photo");
 ap.innerHTML=sess.photo_url?'<img src="'+esc(sess.photo_url)+'" alt="" style="width:100%;height:100%;object-fit:cover">':"👤";
 const pb=document.getElementById("pro-box");
 if(isPro()){
-pb.innerHTML='<div class="card" style="border:2px solid #0e7a3d"><div class="info"><div class="title">⭐ Compte Pro actif</div><div class="meta">Jusqu\'au '+new Date(sess.pro_until).toLocaleDateString("fr-FR")+' — merci pour ton soutien !</div></div></div>';
+pb.innerHTML='<div class="card" style="border:2px solid #0e7a3d"><div class="info"><div class="title">Compte Pro actif ⭐</div><div class="meta">Jusqu\'au '+new Date(sess.pro_until).toLocaleDateString("fr-FR")+' — merci pour ton soutien.</div></div></div>';
 }else{
-pb.innerHTML='<div class="card"><div class="info"><div class="title">Compte gratuit</div><div class="meta">10 annonces actives max · passe Pro pour l\'illimité</div></div></div><button class="btn line" onclick="goPro()">⭐ Passer Pro — 25 000 Ar / mois</button>';
+pb.innerHTML='<div class="card"><div class="info"><div class="title">Compte gratuit</div><div class="meta">10 annonces actives maximum · passe Pro pour l\'illimité</div></div></div><button class="btn line" onclick="goPro()">⭐ Passer Pro — 25 000 Ar / mois</button>';
 }
 }
 
-function doLogout(){saveSess(null);myServer=[];show("page-home");toast("Déconnecté 👋");}
+function doLogout(){saveSess(null);myServer=[];show("page-home");toast("Déconnecté");}
 function goSell(){if(!sess){toggleAuthMode("signup");show("page-auth");toast("Crée ton compte gratuit pour publier (1 min)");}else show("page-sell");}
 function goAccount(){
 if(!sess){toggleAuthMode("login");show("page-auth");return;}
@@ -469,7 +469,7 @@ try{
 toast("Création de la commande…");
 const d=await rpc("create_payment",{p_token:sess.token,p_kind:kind,p_ad_id:boostAd.id});
 openPay(kind,d.payment_id,d.amount);
-}catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+}catch(e){toast(e.message||"Erreur");}
 }
 
 async function goPro(){
@@ -479,7 +479,7 @@ const d=await rpc("create_payment",{p_token:sess.token,p_kind:"pro1"});
 openPay("pro1",d.payment_id,d.amount);
 }catch(e){
 const m=String(e.message||e);
-toast(m.indexOf("deja")>=0?"⭐ Tu es déjà Pro !":"⚠️ "+m);
+toast(m.indexOf("deja")>=0?"Tu es déjà Pro":m);
 }
 }
 
@@ -488,7 +488,7 @@ lastPay={kind:kind,pid:pid};
 document.getElementById("pay-what").textContent=KINDL[kind]||kind;
 document.getElementById("pay-amount").textContent=fmt(amount);
 document.getElementById("pay-ref").textContent="#"+pid;
-const msg="Bonjour BazarMada ! Je viens de payer "+fmt(amount)+" par MVola pour : "+(KINDL[kind]||kind)+(boostAd&&kind!=="pro1"?" — Annonce : "+boostAd.title:"")+". Référence #"+pid+". Voici la capture MVola 👇";
+const msg="Bonjour BazarMada ! Je viens de payer "+fmt(amount)+" par MVola pour : "+(KINDL[kind]||kind)+(boostAd&&kind!=="pro1"?" — Annonce : "+boostAd.title:"")+". Référence #"+pid+". Voici la capture MVola.";
 document.getElementById("pay-wa").href="https://wa.me/"+PAY_WA+"?text="+encodeURIComponent(msg);
 show("page-pay");
 }
@@ -528,7 +528,7 @@ function renderSkeletons(){
 
 function card(a){
 return '<div class="card" onclick="openDetail('+a.id+')">'+thumbHTML(a,false)+(isBoosted(a)?'<span class="fire">🔥</span>':'')+
-'<div class="info"><div class="title">'+esc(a.title)+'</div><div class="price">'+fmt(a.price)+'</div><div class="meta">📍 '+esc(a.city)+' · '+esc(a.cat)+'</div></div>'+
+'<div class="info"><div class="title">'+esc(a.title)+'</div><div class="price">'+fmt(a.price)+'</div><div class="meta">'+esc(a.city)+' · '+esc(a.cat)+'</div></div>'+
 '<button class="heart '+(favs.has(a.id)?"on":"")+'" onclick="event.stopPropagation();toggleFav('+a.id+')">♥</button></div>';
 }
 
@@ -536,7 +536,7 @@ function gcard(a){
 return '<div class="gcard" onclick="openDetail('+a.id+')">'+(isBoosted(a)?'<span class="fire">🔥</span>':'')+gthumbHTML(a)+
 '<div class="ginfo"><div class="gtitle">'+esc(a.title)+'</div>'+
 '<div class="price" style="font-size:14px;margin-bottom:2px">'+fmt(a.price)+'</div>'+
-'<div class="meta">📍 '+esc(a.city)+'</div></div>'+
+'<div class="meta">'+esc(a.city)+'</div></div>'+
 '<button class="heart '+(favs.has(a.id)?"on":"")+'" onclick="event.stopPropagation();toggleFav('+a.id+')">♥</button></div>';
 }
 
@@ -547,14 +547,14 @@ if(!currentHero){el.hidden=true;el.innerHTML="";return;}
 const b=currentHero;
 const img='<img class="hbg" src="'+esc(b.image_url)+'" alt="" loading="lazy">';
 const body='<div class="hin">'+
-'<span class="hbadge">✨ Partenaire officiel</span>'+
+'<span class="hbadge">Partenaire officiel</span>'+
 '<div class="hadv">Annonceur : <b>'+esc(b.advertiser)+'</b></div>'+
 (b.title?'<div class="htitle">'+esc(b.title)+'</div>':"")+
 (b.description?'<div class="hdesc">'+esc(b.description)+'</div>':"")+
-'<span class="hcta">'+(b.link_url?"Découvrir les offres ↗":"En savoir plus")+'</span>'+
+'<span class="hcta">'+(b.link_url?"Découvrir les offres":"En savoir plus")+'</span>'+
 '</div>';
 const box=(b.link_url?'<a class="hero" href="'+esc(b.link_url)+'" target="_blank" rel="noopener">':'<div class="hero">')+img+body+(b.link_url?'</a>':'</div>');
-el.innerHTML=box+'<a class="hreg" onclick="openInfo(\'contact\')">📣 Votre pub ici ? Contactez notre régie</a>';
+el.innerHTML=box+'<a class="hreg" onclick="openInfo(\'contact\')">Votre pub ici ? Contactez notre régie</a>';
 el.hidden=false;
 }
 
@@ -564,8 +564,8 @@ const body='<div class="sbody">'+
 '<div class="sadv">'+esc(b.advertiser||"Partenaire")+'</div>'+
 (b.title?'<div class="stitle">'+esc(b.title)+'</div>':"")+
 (b.description?'<div class="sdesc">'+esc(b.description)+'</div>':"")+
-'<div class="sfoot"><span class="sspace">Espace partenaire</span>'+(b.link_url?'<span class="sbtn">Découvrir ↗</span>':"")+'</div></div>';
-const inner='<span class="scbadge">📢 Sponsorisé</span>'+img+body;
+'<div class="sfoot"><span class="sspace">Espace partenaire</span>'+(b.link_url?'<span class="sbtn">Découvrir</span>':"")+'</div></div>';
+const inner='<span class="scbadge">Sponsorisé</span>'+img+body;
 return b.link_url?'<a class="scard" href="'+esc(b.link_url)+'" target="_blank" rel="noopener">'+inner+'</a>':'<div class="scard">'+inner+'</div>';
 }
 
@@ -591,9 +591,9 @@ cardIdx++;
 }
 }
 if(!list.length){
-html='<div class="empty"><div class="eicon">🔍</div>Aucune annonce trouvée 🙏<br>Essaie une autre recherche — ou publie la première !</div>';
+html='<div class="empty"><div class="eicon">🔍</div>Aucune annonce trouvée.<br>Essaie une autre recherche — ou publie la première.</div>';
 }else{
-html+='<footer class="footer"><button onclick="openInfo(\'about\')">À propos</button> · <button onclick="openInfo(\'contact\')">Contact</button> · <button onclick="openInfo(\'secu\')">Sécurité</button><div class="copy">BazarMada © 2025 — Fait avec ❤️ à Madagascar</div></footer>';
+html+='<footer class="footer"><button onclick="openInfo(\'about\')">À propos</button> · <button onclick="openInfo(\'contact\')">Contact</button> · <button onclick="openInfo(\'secu\')">Sécurité</button><div class="copy">BazarMada — Tous droits réservés 2025</div></footer>';
 }
 wrap.innerHTML=html;
 }
@@ -601,7 +601,7 @@ wrap.innerHTML=html;
 function renderStatus(){
 const s=$("#status");
 if(online){s.hidden=true;}
-else{s.hidden=false;s.textContent="📡 Mode démo — connexion à la base impossible (vérifie Internet ou préviens-moi)";}
+else{s.hidden=false;s.textContent="Mode démo — connexion à la base impossible. Vérifie Internet ou préviens-moi.";}
 }
 
 function toggleFav(id){favs.has(id)?favs.delete(id):favs.add(id);saveFavs();if(!$("#page-home").hidden)render();}
@@ -610,12 +610,12 @@ function openDetail(id){
 const a=ads.find(x=>x.id===id);if(!a)return;
 currentAd=a;
  $("#d-thumb").innerHTML=thumbHTML(a,true);
- $("#d-cat").innerHTML=badge(a.cat)+(isBoosted(a)?' <span class="cbadge" style="background:#fde68a;color:#92400e">🔥 Mis en avant</span>':"");
+ $("#d-cat").innerHTML=badge(a.cat)+(isBoosted(a)?' <span class="cbadge" style="background:#fde68a;color:#92400e">Mis en avant</span>':"");
  $("#d-title").textContent=a.title;
  $("#d-price").textContent=fmt(a.price);
 const d=a.created_at?new Date(a.created_at).toLocaleDateString("fr-FR"):a.date;
- $("#d-meta").textContent="📍 "+a.city+(d?" · publié le "+d:"");
- $("#d-phone").textContent="☎️ Vendeur : "+fmtPhone(a.phone||"");
+ $("#d-meta").textContent=a.city+(d?" · publié le "+d:"");
+ $("#d-phone").textContent="Vendeur : "+fmtPhone(a.phone||"");
  $("#d-desc").textContent=a.description||a.desc||"";
  $("#d-call").href="tel:+"+waNum(a.phone||"");
  $("#d-wa").href="https://wa.me/"+waNum(a.phone||"")+"?text="+encodeURIComponent("Bonjour ! Je suis intéressé par votre annonce : "+a.title);
@@ -647,7 +647,7 @@ if(name)localStorage.setItem("mm_buyername",name);
 try{
 const d=await rpc("start_chat",{p_ad_id:currentAd.id,p_buyer_token:buyerTok(),p_name:name});
 openChat(d.chat_id);
-}catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+}catch(e){toast(e.message||"Erreur");}
 }
 
 async function openChats(){
@@ -660,9 +660,9 @@ const list=Array.isArray(d)?d:[];
 '<div class="meta">'+esc(c.other||"")+'</div>'+
 '<div class="meta" style="color:#0e7a3d;font-weight:700">'+esc(c.last_msg||"Nouvelle discussion")+'</div></div>'+
 '<div class="meta" style="flex:0 0 auto">'+(c.last_at?new Date(c.last_at).toLocaleDateString("fr-FR"):"")+'</div></div>'
-).join(""):'<div class="empty"><div class="eicon">💬</div>Aucune discussion.<br>Elles apparaissent quand un acheteur t\'écrit — ou quand tu écris à un vendeur depuis une annonce.</div>';
+).join(""):'<div class="empty"><div class="eicon">💬</div>Aucune discussion pour l\'instant.<br>Elles apparaissent quand un acheteur t\'écrit — ou quand tu écris à un vendeur depuis une annonce.</div>';
 show("page-chats");
-}catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+}catch(e){toast(e.message||"Erreur");}
 }
 
 async function openChat(id){
@@ -673,7 +673,7 @@ chatRole=c.role||"buyer";
 lastChatJson=JSON.stringify(c);
 renderChatInner(c);
 startPoll();
-}catch(e){toast("⚠️ "+(e.message||"Erreur"));}
+}catch(e){toast(e.message||"Erreur");}
 }
 
 function renderChatInner(c){
@@ -683,7 +683,7 @@ const msgs=c.msgs||[];
 const mine=(chatRole==="buyer"&&m.sender==="buyer")||(chatRole==="seller"&&m.sender==="seller");
 return '<div class="cmsg '+(mine?"cmine":"ctheir")+'">'+esc(m.body)+
 '<div class="ctime">'+(m.at?new Date(m.at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"")+'</div></div>';
-}).join("")||'<div class="empty">Démarre la conversation 👋</div>';
+}).join("")||'<div class="empty">Démarre la conversation.</div>';
 const box=$("#cmsgs");box.scrollTop=box.scrollHeight;
 show("page-chat");
 }
@@ -708,7 +708,7 @@ try{
 if(chatRole==="buyer")await rpc("send_msg",{p_chat_id:chatId,p_body:body,p_buyer_token:buyerTok()});
 else await rpc("send_msg",{p_chat_id:chatId,p_body:body,p_seller_token:sess.token});
 await refreshChat();
-}catch(e){toast("⚠️ "+(e.message||"Envoi impossible"));inp.value=body;}
+}catch(e){toast(e.message||"Envoi impossible");inp.value=body;}
 }
 
 function showMine(){
@@ -720,20 +720,20 @@ function renderMine(){
 const rows=myServer.map(a=>{
 const boosted=isBoosted(a),exp=isExpired(a),dl=daysLeft(a);
 let life='';
-if(exp)life=' · ⌛ expirée';
-else if(dl!=null&&dl<=7)life=' · ⏳ '+dl+' jour'+(dl>1?'s':'')+' restant'+(dl>1?'s':'');
+if(exp)life=' · expirée';
+else if(dl!=null&&dl<=7)life=' · '+dl+' jour'+(dl>1?'s':'')+' restant'+(dl>1?'s':'');
 const btns=exp
-?'<button class="btn green" style="padding:7px 10px;font-size:12px" onclick="renewAd('+a.id+')">🔁 Renouveler 45 j</button>'
+?'<button class="btn green" style="padding:7px 10px;font-size:12px" onclick="renewAd('+a.id+')">Renouveler 45 j</button>'
 :'<button class="btn line" style="padding:7px 10px;font-size:12px" onclick="openBoost('+a.id+')">🚀 Booster</button>';
 return '<div class="card'+(exp?' expired':'')+'">'+thumbHTML(a,false)+(boosted?'<span class="fire">🔥</span>':'')+
 '<div class="info"><div class="title">'+esc(a.title)+'</div><div class="price">'+fmt(a.price)+'</div>'+
-'<div class="meta">📍 '+esc(a.city)+' · '+esc(a.cat)+(boosted?' · 🔥 jusqu\'au '+new Date(a.boosted_until).toLocaleDateString("fr-FR"):'')+life+'</div></div>'+
+'<div class="meta">'+esc(a.city)+' · '+esc(a.cat)+(boosted?' · boostée jusqu\'au '+new Date(a.boosted_until).toLocaleDateString("fr-FR"):'')+life+'</div></div>'+
 '<div style="display:flex;flex-direction:column;gap:6px;flex:0 0 auto">'+btns+
-'<button class="btn gray" style="padding:7px 10px;font-size:12px" onclick="delAd('+a.id+')">🗑️</button>'+
+'<button class="btn gray" style="padding:7px 10px;font-size:12px" onclick="delAd('+a.id+')">Suppr.</button>'+
 '</div></div>';
 }).join("");
-const pend=mine.map(a=>'<div class="card">'+thumbHTML(a,false)+'<div class="info"><div class="title">'+esc(a.title)+' <span style="color:#f59e0b;font-weight:700">⏳ en attente</span></div><div class="price">'+fmt(a.price)+'</div><div class="meta">📍 '+esc(a.city)+' · '+esc(a.cat)+'</div></div><button class="heart" style="position:static;font-size:22px" onclick="delAd('+a.id+')">🗑️</button></div>').join("");
- $("#mine-list").innerHTML=(rows+pend)||'<div class="empty"><div class="eicon">📋</div>Aucune annonce pour l\'instant.<br>Appuie sur le gros bouton ＋ pour vendre ton premier article !</div>';
+const pend=mine.map(a=>'<div class="card">'+thumbHTML(a,false)+'<div class="info"><div class="title">'+esc(a.title)+' <span style="color:#f59e0b;font-weight:700">en attente</span></div><div class="price">'+fmt(a.price)+'</div><div class="meta">'+esc(a.city)+' · '+esc(a.cat)+'</div></div><button class="heart" style="position:static;font-size:22px" onclick="delAd('+a.id+')">✕</button></div>').join("");
+ $("#mine-list").innerHTML=(rows+pend)||'<div class="empty"><div class="eicon">📋</div>Aucune annonce pour l\'instant.<br>Appuie sur le bouton ＋ pour vendre ton premier article.</div>';
 }
 
 async function renewAd(id){
@@ -743,8 +743,8 @@ const upd=await rpc("renew_ad",{p_token:sess.token,p_ad_id:id});
 const i=myServer.findIndex(a=>a.id===id);
 if(i>=0)myServer[i]=upd;
 renderMine();render();
-toast("🔁 Renouvelée jusqu'au "+new Date(upd.expires_at).toLocaleDateString("fr-FR"));
-}catch(e){toast("⚠️ "+(e.message||"Impossible de renouveler"));}
+toast("Renouvelée jusqu'au "+new Date(upd.expires_at).toLocaleDateString("fr-FR"));
+}catch(e){toast(e.message||"Impossible de renouveler");}
 }
 
 async function delAd(id){
@@ -757,8 +757,8 @@ myServer=myServer.filter(a=>a.id!==id);
 publicAds=publicAds.filter(a=>a.id!==id);
 ads=[...publicAds,...mine];
 renderMine();render();
-toast("🗑️ Annonce supprimée");
-}catch(e){toast("⚠️ "+(e.message||"Impossible de supprimer"));}
+toast("Annonce supprimée");
+}catch(e){toast(e.message||"Impossible de supprimer");}
 }
 
 function openInfo(k){const i=INFO[k];$("#info-t").textContent=i.t;$("#info-b").innerHTML=i.b;$("#info").hidden=false;}
@@ -819,13 +819,13 @@ else{photoFile=null;p.hidden=true;}
  $("#acc-img").addEventListener("change",async e=>{
 const f=e.target.files[0];
 if(!f||!sess)return;
-toast("📷 Envoi de la photo…");
+toast("Envoi de la photo…");
 try{
 const url=await uploadPhoto(f);
 const d=await rpc("set_my_photo",{p_token:sess.token,p_url:url});
 sess.photo_url=d.photo_url;saveSess(sess);
-renderAccount();toast("✅ Photo de profil mise à jour");
-}catch(err){toast("⚠️ "+(err.message||"Erreur"));}
+renderAccount();toast("Photo de profil mise à jour");
+}catch(err){toast(err.message||"Erreur");}
 e.target.value="";
 });
 
@@ -839,20 +839,20 @@ const f=e.target,btn=f.querySelector('button[type=submit]');
 const ad={title:f.title.value.trim(),price:+f.price.value,cat:f.cat.value,city:f.city.value,description:f.desc.value.trim(),emoji:f.emoji.value,phone:normPhone(f.phone.value)};
 btn.disabled=true;
 try{
-if(photoFile){btn.textContent="📸 Photo…";try{ad.photo_url=await uploadPhoto(photoFile);}catch(err){toast("📸 Photo non envoyée — publication sans photo");}}
+if(photoFile){btn.textContent="Photo…";try{ad.photo_url=await uploadPhoto(photoFile);}catch(err){toast("Photo non envoyée — publication sans photo");}}
 btn.textContent="Envoi…";
 const saved=await publishAd(ad);
 publicAds.unshift(saved);
 ads=[...publicAds,...mine];
 render();show("page-home");
-toast("✅ Annonce publiée — vivante 45 jours !");
+toast("Annonce publiée — vivante 45 jours");
 }catch(err){
-if(err&&err.server){toast("⚠️ "+err.message);}
+if(err&&err.server){toast(err.message);}
 else{
 mine.unshift({...ad,id:Date.now(),date:new Date().toLocaleDateString("fr-FR"),pending:true});
 saveMine();ads=[...publicAds,...mine];
 render();show("page-home");
-toast("📡 Pas de connexion — enregistrée sur ton téléphone");
+toast("Pas de connexion — enregistrée sur ton téléphone");
 }
 }
 photoFile=null;f.reset();
@@ -871,7 +871,7 @@ catch(e){keep.push(a);}
 }else keep.push(a);
 }
 mine=keep;saveMine();
-if(fresh.length)toast("✅ "+fresh.length+" annonce(s) envoyée(s) en ligne !");
+if(fresh.length)toast(fresh.length+" annonce(s) envoyée(s) en ligne");
 }
 
 async function loadMine(){
@@ -926,7 +926,7 @@ b.onclick=()=>{form.emoji.value=em;document.querySelectorAll(".em").forEach(x=>x
 });
 
  $("#search").addEventListener("input",e=>{query=e.target.value.toLowerCase();render();});
- $("#refresh").onclick=async()=>{$("#refresh").textContent="⏳";await loadAds();$("#refresh").textContent="🔄";toast("✅ Annonces actualisées");};
+ $("#refresh").onclick=async()=>{$("#refresh").textContent="…";await loadAds();$("#refresh").textContent="🔄";toast("Annonces actualisées");};
  $("#cbody").addEventListener("keydown",e=>{if(e.key==="Enter")sendChat();});
 
 (async function init(){
@@ -949,10 +949,10 @@ if(sess){await loadMine();renderMine();renderAccount();}
 if(window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone)return;
 let deferred=null;
 const bar=document.getElementById("install"),go=bar.querySelector(".go"),no=bar.querySelector(".no");
-go.onclick=async()=>{bar.style.display="none";if(!deferred)return;deferred.prompt();const c=await deferred.userChoice;deferred=null;if(c.outcome==="accepted")toast("🎉 Installation en cours…");};
+go.onclick=async()=>{bar.style.display="none";if(!deferred)return;deferred.prompt();const c=await deferred.userChoice;deferred=null;if(c.outcome==="accepted")toast("Installation en cours…");};
 no.onclick=()=>{bar.style.display="none";sessionStorage.setItem("mm_no_install","1");};
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;if(!sessionStorage.getItem("mm_no_install"))setTimeout(()=>bar.style.display="flex",2500);});
-window.addEventListener("appinstalled",()=>{bar.style.display="none";toast("✅ BazarMada installée !");});
+window.addEventListener("appinstalled",()=>{bar.style.display="none";toast("BazarMada installée");});
 })();
 
 if("serviceWorker" in navigator){try{navigator.serviceWorker.register("/sw.js");}catch(e){}}
