@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="font-family:system-ui;padding:20px;text-align:center">
+<h2>Generateur d'icones</h2>
+<p>Ouvre cette page dans Chrome, puis touche chaque bouton : l'image se telecharge. Renomme les fichiers comme indique.</p>
+<button onclick="dl(512)" style="padding:14px;font-size:16px;margin:8px">Telecharger 512</button>
+<button onclick="dl(192)" style="padding:14px;font-size:16px;margin:8px">Telecharger 192</button>
+<script>
+function dl(size){
+const c=document.createElement("canvas");
+c.width=size;c.height=size;
+const x=c.getContext("2d");
+const r=size*0.21;
+x.fillStyle="#0e7a3d";
+x.beginPath();
+x.moveTo(r,0);x.arcTo(size,0,size,size,r);x.arcTo(size,size,0,size,r);x.arcTo(size,0,size,0,r);x.arcTo(0,0,0,0,r);
+x.fill();
+x.fillStyle="#ffffff";
+x.font="bold "+(size*0.53)+"px Arial";
+x.textAlign="center";x.textBaseline="middle";
+x.fillText("B",size/2,size/2+size*0.02);
+const a=document.createElement("a");
+a.download="icon-"+size+".png";
+a.href=c.toDataURL("image/png");
+a.click();
+}
+</script>
+</body></html>
