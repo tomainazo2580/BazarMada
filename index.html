@@ -190,6 +190,7 @@ h2{font-size:18px;margin-bottom:4px}
     </div>
     <button id="d-chat" class="btn green" style="margin-top:10px" onclick="startChatFromDetail()">💬 Discuter dans l'app (discret)</button>
     <button class="btn gray" style="margin-top:10px" onclick="shareAd()">📤 Partager cette annonce</button>
+    <button class="btn line" style="margin-top:10px;border-color:#ef4444;color:#b91c1c" onclick="reportCurrent()">Signaler cette annonce</button>
     <p class="note">Sécurité : rencontrez le vendeur en journée, vérifiez l'article avant de payer, ne versez jamais d'acompte à un inconnu.</p>
   </section>
 
@@ -455,14 +456,6 @@ renderAccount();show("page-account");
 })();
 }
 
-/* ===== Signalement ===== */
-async function reportCurrent(){
-if(!currentAd)return;
-const r=prompt("Pourquoi signaler cette annonce ? (arnaque, produit interdit, faux...)");
-if(!r||r.trim().length<3)return;
-try{await rpc("report_ad",{p_ad_id:currentAd.id,p_reason:r.trim()});toast("Signalement envoye. Merci !");}
-catch(e){toast(e.message||"Erreur");}
-}
 /* ===== 💰 Boost & Pro ===== */
 function openBoost(id){
 boostAd=myServer.find(a=>a.id===id);
@@ -637,6 +630,15 @@ const txt=currentAd.title+" — "+fmt(currentAd.price)+" — à voir sur BazarMa
 const url=location.origin;
 if(navigator.share){try{await navigator.share({title:"BazarMada",text:txt,url});}catch(e){}}
 else{window.open("https://wa.me/?text="+encodeURIComponent(txt+" "+url),"_blank");}
+}
+
+/* ===== Signalement ===== */
+async function reportCurrent(){
+if(!currentAd)return;
+const r=prompt("Pourquoi signaler cette annonce ? (arnaque, produit interdit, faux...)");
+if(!r||r.trim().length<3)return;
+try{await rpc("report_ad",{p_ad_id:currentAd.id,p_reason:r.trim()});toast("Signalement envoyé. Merci !");}
+catch(e){toast(e.message||"Erreur");}
 }
 
 /* ===== 💬 Chat ===== */
