@@ -103,6 +103,7 @@ h2{font-size:18px;margin-bottom:4px}
 .step{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}
 .stepn{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:#0e7a3d;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px}
 .step .meta{font-size:13px;line-height:1.45}
+.expired{opacity:.6}
 .scard{display:block;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 0 0 2px #f59e0b inset,0 1px 3px rgba(0,0,0,.07);position:relative;text-decoration:none;color:#111}
 .scbadge{position:absolute;top:8px;left:8px;background:#f59e0b;color:#111;font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .scard .sgimg{width:100%;aspect-ratio:16/10;object-fit:cover;display:block}
@@ -280,6 +281,7 @@ h2{font-size:18px;margin-bottom:4px}
   <section id="page-mine" hidden>
     <button class="back" onclick="show('page-account')">← Mon compte</button>
     <h2>Mes annonces</h2>
+    <p class="note" style="text-align:left">⌛ Les annonces vivent 45 jours. Après, elles restent ici — renouvelle-les gratuitement en 1 clic.</p>
     <div id="mine-list" style="margin-top:12px"></div>
   </section>
 </main>
@@ -463,6 +465,8 @@ function grad(a){return "g"+(a.id%5);}
 function esc(s){return String(s).replace(/</g,"&lt;").replace(/"/g,"&quot;");}
 function badge(c){const x=CATC[c]||CATC["Divers"];return '<span class="cbadge" style="background:'+x[0]+';color:'+x[1]+'">'+esc(c)+'</span>';}
 function isBoosted(a){return !!(a.boosted_until&&new Date(a.boosted_until)>new Date());}
+function isExpired(a){return !(a.expires_at==null||new Date(a.expires_at)>new Date());}
+function daysLeft(a){if(!a.expires_at)return null;const ms=new Date(a.expires_at)-new Date();return Math.max(0,Math.ceil(ms/86400000));}
 function show(id){
 document.querySelectorAll("main section").forEach(s=>s.hidden=(s.id!==id));
 const h=$("#hero");
@@ -596,17 +600,33 @@ if(!sess){toggleAuthMode("login");show("page-auth");toast("Connecte-toi pour voi
 
 function renderMine(){
 const rows=myServer.map(a=>{
-const boosted=isBoosted(a);
-return '<div class="card">'+thumbHTML(a,false)+(boosted?'<span class="fire">🔥</span>':'')+
+const boosted=isBoosted(a),exp=isExpired(a),dl=daysLeft(a);
+let life='';
+if(exp)life=' · ⌛ expirée';
+else if(dl!=null&&dl<=7)life=' · ⏳ '+dl+' jour'+(dl>1?'s':'')+' restant'+(dl>1?'s':'');
+const btns=exp
+?'<button class="btn green" style="padding:7px 10px;font-size:12px" onclick="renewAd('+a.id+')">🔁 Renouveler 45 j</button>'
+:'<button class="btn line" style="padding:7px 10px;font-size:12px" onclick="openBoost('+a.id+')">🚀 Booster</button>';
+return '<div class="card'+(exp?' expired':'')+'">'+thumbHTML(a,false)+(boosted?'<span class="fire">🔥</span>':'')+
 '<div class="info"><div class="title">'+esc(a.title)+'</div><div class="price">'+fmt(a.price)+'</div>'+
-'<div class="meta">📍 '+esc(a.city)+' · '+esc(a.cat)+(boosted?' · 🔥 jusqu\'au '+new Date(a.boosted_until).toLocaleDateString("fr-FR"):'')+'</div></div>'+
-'<div style="display:flex;flex-direction:column;gap:6px;flex:0 0 auto">'+
-'<button class="btn line" style="padding:7px 10px;font-size:12px" onclick="openBoost('+a.id+')">🚀 Booster</button>'+
+'<div class="meta">📍 '+esc(a.city)+' · '+esc(a.cat)+(boosted?' · 🔥 jusqu\'au '+new Date(a.boosted_until).toLocaleDateString("fr-FR"):'')+life+'</div></div>'+
+'<div style="display:flex;flex-direction:column;gap:6px;flex:0 0 auto">'+btns+
 '<button class="btn gray" style="padding:7px 10px;font-size:12px" onclick="delAd('+a.id+')">🗑️</button>'+
 '</div></div>';
 }).join("");
 const pend=mine.map(a=>'<div class="card">'+thumbHTML(a,false)+'<div class="info"><div class="title">'+esc(a.title)+' <span style="color:#f59e0b;font-weight:700">⏳ en attente</span></div><div class="price">'+fmt(a.price)+'</div><div class="meta">📍 '+esc(a.city)+' · '+esc(a.cat)+'</div></div><button class="heart" style="position:static;font-size:22px" onclick="delAd('+a.id+')">🗑️</button></div>').join("");
  $("#mine-list").innerHTML=(rows+pend)||'<div class="empty"><div class="eicon">📋</div>Aucune annonce pour l\'instant.<br>Appuie sur le gros bouton ＋ pour vendre ton premier article !</div>';
+}
+
+async function renewAd(id){
+if(!confirm("Renouveler cette annonce pour 45 jours supplémentaires ?"))return;
+try{
+const upd=await rpc("renew_ad",{p_token:sess.token,p_ad_id:id});
+const i=myServer.findIndex(a=>a.id===id);
+if(i>=0)myServer[i]=upd;
+renderMine();render();
+toast("🔁 Renouvelée jusqu'au "+new Date(upd.expires_at).toLocaleDateString("fr-FR"));
+}catch(e){toast("⚠️ "+(e.message||"Impossible de renouveler"));}
 }
 
 async function delAd(id){
@@ -627,7 +647,7 @@ function openInfo(k){const i=INFO[k];$("#info-t").textContent=i.t;$("#info-b").i
 function closeInfo(){$("#info").hidden=true;}
 function startApp(){$("#welcome").hidden=true;localStorage.setItem("mm_welcomed","1");}
 
-/* ===== 📸 Photo : compression robuste (tolère les grosses images) ===== */
+/* ===== 📸 Photo : compression robuste ===== */
 function shrinkPhoto(file){
 return new Promise((resolve,reject)=>{
 const img=new Image();
@@ -694,7 +714,7 @@ const saved=await publishAd(ad);
 publicAds.unshift(saved);
 ads=[...publicAds,...mine];
 render();show("page-home");
-toast("✅ Annonce publiée en ligne !");
+toast("✅ Annonce publiée — vivante 45 jours !");
 }catch(err){
 mine.unshift({...ad,id:Date.now(),date:new Date().toLocaleDateString("fr-FR"),pending:true});
 saveMine();ads=[...publicAds,...mine];
@@ -729,11 +749,17 @@ catch(e){myServer=[];}
 async function loadAds(){
 renderSkeletons();
 try{
-const r=await fetch(API+"?select=*&status=eq.active&order=boosted_until.desc.nullslast,created_at.desc",{headers:{apikey:SB_KEY}});
+const r=await rpc("list_active_ads");
+publicAds=[...fresh,...(Array.isArray(r)?r:[])];
+online=true;
+}catch(e){
+try{
+const r=await fetch(API+"?select=*&status=eq.active&order=created_at.desc",{headers:{apikey:SB_KEY}});
 if(!r.ok)throw new Error("HTTP "+r.status);
 publicAds=[...fresh,...(await r.json())];
 online=true;
-}catch(e){publicAds=[...DEMO];online=false;}
+}catch(e2){publicAds=[...DEMO];online=false;}
+}
 fresh=[];
 ads=[...publicAds,...mine];
 try{
@@ -761,7 +787,7 @@ const form=$("#sell-form");
 ["📱","💻","🚗","🏍️","🏠","🛋️","👗","🐂","🌾","📦"].forEach(em=>{
 const b=document.createElement("button");
 b.type="button";b.className="em"+(em==="📦"?" on":"");b.textContent=em;
-b.onclick=()=>{form.emoji.value=em;document.querySelectorAll(".em").forEach(x=>x.classList.remove("on"));b.classList.add("on");};
+b.onclick=()=>{form.emoji.value=em;document.querySelectorAll(".em").forEach(x=>x.classList.toggle("on",x.textContent==="📦"));b.classList.add("on");};
  $("#emoji-pick").appendChild(b);
 });
 
