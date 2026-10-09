@@ -686,7 +686,18 @@ return '<div class="cmsg '+(mine?"cmine":"ctheir")+'">'+esc(m.body)+
 }).join("")||'<div class="empty">Démarre la conversation.</div>';
 const box=$("#cmsgs");box.scrollTop=box.scrollHeight;
 show("page-chat");
+fixChatHeight();
 }
+function fixChatHeight(){
+const w=document.querySelector("#page-chat .cwrap");
+const nav=document.querySelector(".bottom");
+if(!w)return;
+const top=w.getBoundingClientRect().top;
+const h=window.innerHeight-top-(nav?nav.offsetHeight:80)-14;
+w.style.height=Math.max(260,h)+"px";
+const box=$("#cmsgs");box.scrollTop=box.scrollHeight;
+}
+window.addEventListener("resize",function(){if(chatId)fixChatHeight();});
 
 function startPoll(){stopPoll();chatTimer=setInterval(refreshChat,4000);}
 function stopPoll(){if(chatTimer){clearInterval(chatTimer);chatTimer=null;}}
