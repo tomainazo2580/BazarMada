@@ -86,6 +86,13 @@ textarea{min-height:64px;resize:vertical}
   </div>
 
   <div id="status"></div>
+    <div class="tabs" id="tabs2" hidden>
+    <button class="tab on" id="tab-rep" onclick="showTab('rep')">🚩 Signalements</button>
+    <button class="tab" id="tab-pay" onclick="showTab('pay')">💰 Paiements</button>
+    <button class="tab" id="tab-ads" onclick="showTab('ads')">📢 Annonces</button>
+    <button class="tab" id="tab-sellers" onclick="showTab('sellers')">👥 Vendeurs</button>
+    <button class="tab" id="tab-banners" onclick="showTab('banners')">📣 Publicités</button>
+  </div>
   <div class="stats" id="stats"></div>
 
   <div class="tabs">
@@ -95,6 +102,7 @@ textarea{min-height:64px;resize:vertical}
     <button class="tab" id="tab-banners" onclick="showTab('banners')">📣 Publicités</button>
   </div>
 
+    <div id="rep-list" hidden></div>
   <div id="pay-list" hidden></div>
   <div id="ads-list"></div>
   <div id="sellers-list" hidden></div>
@@ -208,6 +216,7 @@ try{await loadSellers();}catch(e){status("⚠️ Vendeurs : "+(e.message||"erreu
 try{await loadBanners();}catch(e){status("⚠️ Publicités : "+(e.message||"erreur"),"err");}
 status("");
 }
+try{await loadReports();}catch(e){}
 
 function showTab(t){
 document.getElementById("tab-pay").className="tab"+(t==="pay"?" on":"");
@@ -412,6 +421,35 @@ try{await rpc("admin_delete_banner",{p_token:S.token,p_id:id});toast("🗑️ Su
 catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
 }
 
+/* ===== 🚩 Signalements ===== */
+async function loadReports(){
+const list=await rpc("admin_list_reports",{p_token:S.token});
+let html="";
+if(list&&list.length){
+for(let i=0;i<list.length;i++){
+const r=list[i];
+html+='<div class="card"><div class="row">'+
+'<div class="grow"><div class="t">'+esc(r.reason)+'</div>'+
+'<div class="m">Annonce : '+esc(r.ad_title||"?")+' · ☎️ '+esc(r.ad_phone||"?")+'</div>'+
+'<div class="m">'+(r.created_at?new Date(r.created_at).toLocaleString("fr-FR"):"")+'</div></div>'+
+(r.ad_id?'<button class="btn sm gray" onclick="goReport('+r.ad_id+')">Voir annonce</button>':'')+
+(r.handled?'<span class="badge b-ok">traite</span>':'<button class="btn sm green" onclick="handleReport('+r.id+')">Marquer traite</button>')+
+'</div></div>';
+}
+}else html='<div class="card"><p class="sub">Aucun signalement. Tres bien.</p></div>';
+document.getElementById("rep-list").innerHTML=html;
+}
+
+async function handleReport(id){
+try{await rpc("admin_handle_report",{p_token:S.token,p_report_id:id});toast("Traite");await refreshAll();}
+catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
+}
+
+function goReport(adId){
+showTab('ads');
+const el=document.querySelector('#ads-list .card');
+if(el)el.scrollIntoView({behavior:"smooth"});
+}
 if(S){try{openPanel();}catch(e){showErr("Erreur ouverture session : "+e.message);}}
 </script>
 </body>
