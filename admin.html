@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BazarMada — Admin v6</title>
+<title>BazarMada — Admin v7</title>
 <script>
 window.addEventListener("error",function(e){var b=document.getElementById("errbar");if(b){b.textContent="⚠️ Erreur page : "+(e.message||"inconnue")+" (ligne "+e.lineno+")";b.style.display="block";}});
 window.addEventListener("unhandledrejection",function(e){var r=e.reason;var b=document.getElementById("errbar");if(b){b.textContent="⚠️ Erreur : "+((r&&r.message)?r.message:r);b.style.display="block";}});
@@ -65,7 +65,7 @@ textarea{min-height:64px;resize:vertical}
 
 <div id="login">
   <h1>🎛️ Bazar<span>Mada</span> — Admin</h1>
-  <div class="ver">version 6 — paiements</div>
+  <div class="ver">version 7 — images renforcées</div>
   <p class="sub">Accès réservé à l'administrateur</p>
   <div class="card">
     <label>Numéro de téléphone</label>
@@ -239,7 +239,7 @@ html+='<div class="card"><div class="row">'+
 (pending?'<button class="btn sm green" onclick="decidePay('+p.id+',true)">Valider</button><button class="btn sm red" onclick="decidePay('+p.id+',false)">Refuser</button>':'')+
 '</div></div>';
 }
-}else html='<div class="card"><p class="sub">Aucun paiement pour l\'instant.<br>Quand un vendeur paiera un boost ou Pro, sa demande apparaîtra ici.</p></div>';
+}else html='<div class="card"><p class="sub">Aucun paiement pour l\'instant.</p></div>';
 document.getElementById("pay-list").innerHTML=html;
 }
 
@@ -325,14 +325,24 @@ function shrinkImg(file){
 return new Promise(function(resolve,reject){
 const img=new Image();
 img.onload=function(){
-const max=1024;
 let w=img.width,h=img.height;
-if(w>h&&w>max){h=Math.round(h*max/w);w=max;}
-else if(h>=w&&h>max){w=Math.round(w*max/h);h=max;}
+const MAX=1024, MAXB=900*1024;
+const longest=Math.max(w,h);
+if(longest>MAX){
+const r=MAX/longest;
+w=Math.round(w*r);h=Math.round(h*r);
+}
 const c=document.createElement("canvas");
 c.width=w;c.height=h;
 c.getContext("2d").drawImage(img,0,0,w,h);
-c.toBlob(function(b){b?resolve(b):reject(new Error("compression"));},"image/jpeg",0.75);
+const doQ=function(q){
+c.toBlob(function(b){
+if(!b){reject(new Error("compression"));return;}
+if(b.size<=MAXB||q<=0.3){resolve(b);return;}
+doQ(q-0.15);
+},"image/jpeg",q);
+};
+doQ(0.75);
 URL.revokeObjectURL(img.src);
 };
 img.onerror=function(){reject(new Error("lecture image"));};
