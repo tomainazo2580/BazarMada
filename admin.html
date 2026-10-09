@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BazarMada — Admin v5</title>
+<title>BazarMada — Admin v6</title>
 <script>
 window.addEventListener("error",function(e){var b=document.getElementById("errbar");if(b){b.textContent="⚠️ Erreur page : "+(e.message||"inconnue")+" (ligne "+e.lineno+")";b.style.display="block";}});
 window.addEventListener("unhandledrejection",function(e){var r=e.reason;var b=document.getElementById("errbar");if(b){b.textContent="⚠️ Erreur : "+((r&&r.message)?r.message:r);b.style.display="block";}});
@@ -27,13 +27,15 @@ textarea{min-height:64px;resize:vertical}
 .btn.sm{display:inline-block;width:auto;padding:7px 12px;font-size:12px;border-radius:8px}
 .typebtn{flex:1;padding:10px;border:2px solid #374151;border-radius:10px;background:#111827;color:#9ca3af;font-weight:800;font-size:13px;cursor:pointer}
 .typebtn.on{border-color:#f59e0b;color:#fbbf24;background:#292524}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
 .stat{background:#1f2937;border-radius:12px;padding:14px;text-align:center}
 .stat b{display:block;font-size:24px;color:#34d399}
+.stat.hot b{color:#fbbf24}
 .stat span{font-size:12px;color:#9ca3af}
-.tabs{display:flex;gap:8px;margin-bottom:14px}
-.tab{flex:1;padding:10px;border:none;border-radius:10px;background:#1f2937;color:#9ca3af;font-weight:700;font-size:13px;cursor:pointer}
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.tab{flex:1;padding:10px;border:none;border-radius:10px;background:#1f2937;color:#9ca3af;font-weight:700;font-size:13px;cursor:pointer;min-width:100px}
 .tab.on{background:#0e7a3d;color:#fff}
+.tab.alert{background:#78350f;color:#fde68a}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .badge{padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
 .b-active{background:#064e3b;color:#6ee7b7}
@@ -43,6 +45,7 @@ textarea{min-height:64px;resize:vertical}
 .b-admin{background:#4c1d95;color:#c4b5fd}
 .b-hero{background:#78350f;color:#fcd34d}
 .b-card{background:#1e3a5f;color:#93c5fd}
+.b-pend{background:#78350f;color:#fde68a}
 .t{font-weight:700;font-size:14px;color:#fff}
 .m{font-size:12px;color:#9ca3af}
 .grow{flex:1;min-width:150px}
@@ -62,7 +65,7 @@ textarea{min-height:64px;resize:vertical}
 
 <div id="login">
   <h1>🎛️ Bazar<span>Mada</span> — Admin</h1>
-  <div class="ver">version 5 — pubs hero &amp; cartes</div>
+  <div class="ver">version 6 — paiements</div>
   <p class="sub">Accès réservé à l'administrateur</p>
   <div class="card">
     <label>Numéro de téléphone</label>
@@ -86,11 +89,13 @@ textarea{min-height:64px;resize:vertical}
   <div class="stats" id="stats"></div>
 
   <div class="tabs">
+    <button class="tab" id="tab-pay" onclick="showTab('pay')">💰 Paiements</button>
     <button class="tab on" id="tab-ads" onclick="showTab('ads')">📢 Annonces</button>
     <button class="tab" id="tab-sellers" onclick="showTab('sellers')">👥 Vendeurs</button>
     <button class="tab" id="tab-banners" onclick="showTab('banners')">📣 Publicités</button>
   </div>
 
+  <div id="pay-list" hidden></div>
   <div id="ads-list"></div>
   <div id="sellers-list" hidden></div>
 
@@ -134,7 +139,6 @@ if(!txt){b.style.display="none";b.textContent="";return;}
 b.textContent="⚠️ "+txt;
 b.style.display="block";
 }
-
 function status(txt,kind){
 const s=document.getElementById("status");
 s.textContent=txt;s.className=kind?"s-"+kind:"";
@@ -144,6 +148,7 @@ function toast(m){status(m,"ok");setTimeout(function(){if(document.getElementByI
 function fmt(n){return new Intl.NumberFormat("fr-FR").format(n)+" Ar";}
 function normPhone(p){p=String(p).replace(/\D/g,"");if(p.length===12&&p.indexOf("261")===0)p="0"+p.slice(3);return p;}
 function esc(s){return String(s==null?"":s).replace(/</g,"&lt;").replace(/"/g,"&quot;");}
+function isBoosted(a){return a.boosted_until&&new Date(a.boosted_until)>new Date();}
 
 async function rpc(name,args){
 const r=await fetch(SB_URL+"/rest/v1/rpc/"+name,{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(args)});
@@ -184,16 +189,20 @@ refreshAll();
 
 async function refreshAll(){
 status("Chargement…","wait");
+let pendCount=0;
 try{
 const st=await rpc("admin_stats",{p_token:S.token});
+pendCount=st.payments_pending||0;
 document.getElementById("stats").innerHTML=
+'<div class="stat'+(pendCount>0?" hot":"")+'"><b>'+pendCount+'</b><span>À valider 💰</span></div>'+
 '<div class="stat"><b>'+st.ads_total+'</b><span>Annonces</span></div>'+
 '<div class="stat"><b>'+st.ads_active+'</b><span>Actives</span></div>'+
 '<div class="stat"><b>'+st.ads_today+'</b><span>Aujourd\'hui</span></div>'+
 '<div class="stat"><b>'+st.sellers_total+'</b><span>Vendeurs</span></div>'+
-'<div class="stat"><b>'+st.sellers_blocked+'</b><span>Bloqués</span></div>'+
 '<div class="stat"><b>'+(st.banners_active!=null?st.banners_active:"?")+'</b><span>Pubs ON</span></div>';
+document.getElementById("tab-pay").className="tab"+(pendCount>0?" alert":"");
 }catch(e){status("⚠️ "+(e.message||"Erreur stats"),"err");}
+try{await loadPayments();}catch(e){status("⚠️ Paiements : "+(e.message||"erreur"),"err");}
 try{await loadAds();}catch(e){status("⚠️ Annonces : "+(e.message||"erreur"),"err");}
 try{await loadSellers();}catch(e){status("⚠️ Vendeurs : "+(e.message||"erreur"),"err");}
 try{await loadBanners();}catch(e){status("⚠️ Publicités : "+(e.message||"erreur"),"err");}
@@ -201,12 +210,44 @@ status("");
 }
 
 function showTab(t){
+document.getElementById("tab-pay").className="tab"+(t==="pay"?" on":"");
 document.getElementById("tab-ads").className="tab"+(t==="ads"?" on":"");
 document.getElementById("tab-sellers").className="tab"+(t==="sellers"?" on":"");
 document.getElementById("tab-banners").className="tab"+(t==="banners"?" on":"");
+document.getElementById("pay-list").hidden=(t!=="pay");
 document.getElementById("ads-list").hidden=(t!=="ads");
 document.getElementById("sellers-list").hidden=(t!=="sellers");
 document.getElementById("banners-list").hidden=(t!=="banners");
+}
+
+/* ===== 💰 Paiements ===== */
+const KINDL={boost7:"🔥 Coup de pouce 7 j",boost30:"🔥 Coup de pouce 30 j",pro1:"⭐ Compte Pro — 1 mois"};
+
+async function loadPayments(){
+const list=await rpc("admin_list_payments",{p_token:S.token});
+let html="";
+if(list&&list.length){
+for(let i=0;i<list.length;i++){
+const p=list[i];
+const pending=(p.status==="pending");
+html+='<div class="card"><div class="row">'+
+'<div class="grow"><div class="t">'+(KINDL[p.kind]||p.kind)+' — '+fmt(p.amount)+'</div>'+
+'<div class="m">'+esc(p.seller_name||"Vendeur")+' · ☎️ '+esc(p.seller_phone||"?")+'</div>'+
+(p.ad_title?'<div class="m">Annonce : '+esc(p.ad_title)+'</div>':'')+
+'<div class="m">'+(p.created_at?new Date(p.created_at).toLocaleString("fr-FR"):"")+'</div></div>'+
+'<span class="badge '+(pending?"b-pend":(p.status==="approved"?"b-active":"b-hidden"))+'">'+(pending?"⏳ en attente":(p.status==="approved"?"✅ validé":"❌ refusé"))+'</span>'+
+(pending?'<button class="btn sm green" onclick="decidePay('+p.id+',true)">Valider</button><button class="btn sm red" onclick="decidePay('+p.id+',false)">Refuser</button>':'')+
+'</div></div>';
+}
+}else html='<div class="card"><p class="sub">Aucun paiement pour l\'instant.<br>Quand un vendeur paiera un boost ou Pro, sa demande apparaîtra ici.</p></div>';
+document.getElementById("pay-list").innerHTML=html;
+}
+
+async function decidePay(id,ok){
+if(!confirm(ok?"Valider ce paiement et activer l'offre ?":"Refuser ce paiement ?"))return;
+status("Traitement…","wait");
+try{await rpc("admin_decide_payment",{p_token:S.token,p_payment_id:id,p_approve:ok});toast(ok?"✅ Validé — offre activée":"Paiement refusé");await refreshAll();}
+catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
 }
 
 async function loadAds(){
@@ -220,6 +261,7 @@ html+='<div class="card"><div class="row">'+
 '<div class="grow"><div class="t">'+esc(a.title)+'</div>'+
 '<div class="m">'+fmt(a.price)+' · 📍 '+esc(a.city)+' · '+esc(a.cat)+'</div>'+
 '<div class="m">☎️ '+esc(a.phone)+' · '+(a.created_at?new Date(a.created_at).toLocaleDateString("fr-FR"):"")+'</div></div>'+
+(isBoosted(a)?'<span class="badge b-hero">🔥 boosté</span>':'')+
 '<span class="badge '+(vis?"b-active":"b-hidden")+'">'+(vis?"visible":"masquée")+'</span>'+
 '<button class="btn sm gray" onclick="toggleAd('+a.id+',\''+(vis?"hidden":"active")+'\')">'+(vis?"Masquer":"Afficher")+'</button>'+
 '<button class="btn sm red" onclick="removeAd('+a.id+')">Supprimer</button>'+
@@ -248,11 +290,13 @@ let html="";
 if(list&&list.length){
 for(let i=0;i<list.length;i++){
 const v=list[i];
+const pro=v.pro_until&&new Date(v.pro_until)>new Date();
 html+='<div class="card"><div class="row">'+
 '<div class="grow"><div class="t">'+esc(v.name||"Vendeur")+'</div>'+
 '<div class="m">☎️ '+esc(v.phone)+' · '+v.ads_count+' annonce(s)</div>'+
-'<div class="m">Inscrit le '+(v.created_at?new Date(v.created_at).toLocaleDateString("fr-FR"):"?")+'</div></div>'+
+'<div class="m">Inscrit le '+(v.created_at?new Date(v.created_at).toLocaleDateString("fr-FR"):"?")+(pro?' · ⭐ Pro':(v.pro_until?' · Pro expiré':''))+'</div></div>'+
 (v.is_admin?'<span class="badge b-admin">👑 admin</span>':'')+
+(pro?'<span class="badge b-hero">⭐ Pro</span>':'')+
 '<span class="badge '+(v.blocked?"b-block":"b-ok")+'">'+(v.blocked?"bloqué":"actif")+'</span>'+
 (v.id===S.seller_id?'':'<button class="btn sm '+(v.blocked?"green":"gray")+'" onclick="toggleBlock(\''+v.id+'\')">'+(v.blocked?"Débloquer":"Bloquer")+'</button>')+
 '</div></div>';
@@ -273,8 +317,8 @@ bType=t;
 document.getElementById("tb-hero").className="typebtn"+(t==="hero"?" on":"");
 document.getElementById("tb-card").className="typebtn"+(t==="card"?" on":"");
 document.getElementById("b-type-help").textContent=(t==="hero")
-?"Grand bandeau pleine largeur au-dessus des annonces (comme Telma sur ta maquette). Rotation entre annonceurs à chaque actualisation."
-:"Carte qui prend la place d'une annonce dans la grille, tous les 6 articles (comme Orange Money sur ta maquette). Rotation entre annonceurs.";
+?"Grand bandeau pleine largeur au-dessus des annonces. Rotation entre annonceurs à chaque actualisation."
+:"Carte qui prend la place d'une annonce dans la grille, tous les 6 articles. Rotation entre annonceurs.";
 }
 
 function shrinkImg(file){
