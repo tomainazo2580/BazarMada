@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BazarMada — Admin v7</title>
+<title>BazarMada — Admin v8</title>
 <script>
 window.addEventListener("error",function(e){var b=document.getElementById("errbar");if(b){b.textContent="⚠️ Erreur page : "+(e.message||"inconnue")+" (ligne "+e.lineno+")";b.style.display="block";}});
 window.addEventListener("unhandledrejection",function(e){var r=e.reason;var b=document.getElementById("errbar");if(b){b.textContent="⚠️ Erreur : "+((r&&r.message)?r.message:r);b.style.display="block";}});
@@ -33,7 +33,7 @@ textarea{min-height:64px;resize:vertical}
 .stat.hot b{color:#fbbf24}
 .stat span{font-size:12px;color:#9ca3af}
 .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.tab{flex:1;padding:10px;border:none;border-radius:10px;background:#1f2937;color:#9ca3af;font-weight:700;font-size:13px;cursor:pointer;min-width:100px}
+.tab{flex:1;padding:10px;border:none;border-radius:10px;background:#1f2937;color:#9ca3af;font-weight:700;font-size:13px;cursor:pointer;min-width:95px}
 .tab.on{background:#0e7a3d;color:#fff}
 .tab.alert{background:#78350f;color:#fde68a}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -65,7 +65,7 @@ textarea{min-height:64px;resize:vertical}
 
 <div id="login">
   <h1>🎛️ Bazar<span>Mada</span> — Admin</h1>
-  <div class="ver">version 7 — images renforcées</div>
+  <div class="ver">version 8</div>
   <p class="sub">Accès réservé à l'administrateur</p>
   <div class="card">
     <label>Numéro de téléphone</label>
@@ -86,23 +86,17 @@ textarea{min-height:64px;resize:vertical}
   </div>
 
   <div id="status"></div>
-    <div class="tabs" id="tabs2" hidden>
-    <button class="tab on" id="tab-rep" onclick="showTab('rep')">🚩 Signalements</button>
-    <button class="tab" id="tab-pay" onclick="showTab('pay')">💰 Paiements</button>
-    <button class="tab" id="tab-ads" onclick="showTab('ads')">📢 Annonces</button>
-    <button class="tab" id="tab-sellers" onclick="showTab('sellers')">👥 Vendeurs</button>
-    <button class="tab" id="tab-banners" onclick="showTab('banners')">📣 Publicités</button>
-  </div>
   <div class="stats" id="stats"></div>
 
   <div class="tabs">
+    <button class="tab" id="tab-rep" onclick="showTab('rep')">🚩 Signalements</button>
     <button class="tab" id="tab-pay" onclick="showTab('pay')">💰 Paiements</button>
     <button class="tab on" id="tab-ads" onclick="showTab('ads')">📢 Annonces</button>
     <button class="tab" id="tab-sellers" onclick="showTab('sellers')">👥 Vendeurs</button>
     <button class="tab" id="tab-banners" onclick="showTab('banners')">📣 Publicités</button>
   </div>
 
-    <div id="rep-list" hidden></div>
+  <div id="rep-list" hidden></div>
   <div id="pay-list" hidden></div>
   <div id="ads-list"></div>
   <div id="sellers-list" hidden></div>
@@ -197,36 +191,71 @@ refreshAll();
 
 async function refreshAll(){
 status("Chargement…","wait");
-let pendCount=0;
 try{
 const st=await rpc("admin_stats",{p_token:S.token});
-pendCount=st.payments_pending||0;
+const repN=st.reports_open||0,pendN=st.payments_pending||0;
 document.getElementById("stats").innerHTML=
-'<div class="stat'+(pendCount>0?" hot":"")+'"><b>'+pendCount+'</b><span>À valider 💰</span></div>'+
+'<div class="stat'+(repN>0?" hot":"")+'"><b>'+repN+'</b><span>Signalements</span></div>'+
+'<div class="stat'+(pendN>0?" hot":"")+'"><b>'+pendN+'</b><span>À valider</span></div>'+
 '<div class="stat"><b>'+st.ads_total+'</b><span>Annonces</span></div>'+
 '<div class="stat"><b>'+st.ads_active+'</b><span>Actives</span></div>'+
-'<div class="stat"><b>'+st.ads_today+'</b><span>Aujourd\'hui</span></div>'+
 '<div class="stat"><b>'+st.sellers_total+'</b><span>Vendeurs</span></div>'+
 '<div class="stat"><b>'+(st.banners_active!=null?st.banners_active:"?")+'</b><span>Pubs ON</span></div>';
-document.getElementById("tab-pay").className="tab"+(pendCount>0?" alert":"");
+document.getElementById("tab-rep").className="tab"+(repN>0?" alert":"");
+document.getElementById("tab-pay").className="tab"+(pendN>0?" alert":"");
 }catch(e){status("⚠️ "+(e.message||"Erreur stats"),"err");}
+try{await loadReports();}catch(e){status("⚠️ Signalements : "+(e.message||"erreur — lance le SQL reports"),"err");}
 try{await loadPayments();}catch(e){status("⚠️ Paiements : "+(e.message||"erreur"),"err");}
 try{await loadAds();}catch(e){status("⚠️ Annonces : "+(e.message||"erreur"),"err");}
 try{await loadSellers();}catch(e){status("⚠️ Vendeurs : "+(e.message||"erreur"),"err");}
 try{await loadBanners();}catch(e){status("⚠️ Publicités : "+(e.message||"erreur"),"err");}
 status("");
 }
-try{await loadReports();}catch(e){}
 
 function showTab(t){
+document.getElementById("tab-rep").className="tab"+(t==="rep"?" on":"");
 document.getElementById("tab-pay").className="tab"+(t==="pay"?" on":"");
 document.getElementById("tab-ads").className="tab"+(t==="ads"?" on":"");
 document.getElementById("tab-sellers").className="tab"+(t==="sellers"?" on":"");
 document.getElementById("tab-banners").className="tab"+(t==="banners"?" on":"");
+document.getElementById("rep-list").hidden=(t!=="rep");
 document.getElementById("pay-list").hidden=(t!=="pay");
 document.getElementById("ads-list").hidden=(t!=="ads");
 document.getElementById("sellers-list").hidden=(t!=="sellers");
 document.getElementById("banners-list").hidden=(t!=="banners");
+}
+
+/* ===== 🚩 Signalements ===== */
+async function loadReports(){
+const list=await rpc("admin_list_reports",{p_token:S.token});
+let html="";
+if(list&&list.length){
+for(let i=0;i<list.length;i++){
+const r=list[i];
+html+='<div class="card"><div class="row">'+
+'<div class="grow"><div class="t">'+esc(r.reason)+'</div>'+
+'<div class="m">Annonce : '+esc(r.ad_title||"?")+' · ☎️ '+esc(r.ad_phone||"?")+'</div>'+
+'<div class="m">'+(r.created_at?new Date(r.created_at).toLocaleString("fr-FR"):"")+'</div></div>'+
+(r.ad_id?'<button class="btn sm gray" onclick="jumpToAd('+r.ad_id+')">Voir dans Annonces</button>':'')+
+(r.handled?'<span class="badge b-ok">traité</span>':'<button class="btn sm green" onclick="handleReport('+r.id+')">Marquer traité</button>')+
+'</div></div>';
+}
+}else html='<div class="card"><p class="sub">Aucun signalement. Très bien.</p></div>';
+document.getElementById("rep-list").innerHTML=html;
+}
+
+async function handleReport(id){
+try{await rpc("admin_handle_report",{p_token:S.token,p_report_id:id});toast("Traité");await refreshAll();}
+catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
+}
+
+function jumpToAd(adId){
+showTab('ads');
+const cards=document.querySelectorAll('#ads-list .card');
+for(let i=0;i<cards.length;i++){
+if(cards[i].innerHTML.indexOf('toggleAd('+adId+',')>=0){cards[i].scrollIntoView({behavior:"smooth"});return;}
+}
+toast("Annonce introuvable dans les 100 dernières");
 }
 
 /* ===== 💰 Paiements ===== */
@@ -421,35 +450,6 @@ try{await rpc("admin_delete_banner",{p_token:S.token,p_id:id});toast("🗑️ Su
 catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
 }
 
-/* ===== 🚩 Signalements ===== */
-async function loadReports(){
-const list=await rpc("admin_list_reports",{p_token:S.token});
-let html="";
-if(list&&list.length){
-for(let i=0;i<list.length;i++){
-const r=list[i];
-html+='<div class="card"><div class="row">'+
-'<div class="grow"><div class="t">'+esc(r.reason)+'</div>'+
-'<div class="m">Annonce : '+esc(r.ad_title||"?")+' · ☎️ '+esc(r.ad_phone||"?")+'</div>'+
-'<div class="m">'+(r.created_at?new Date(r.created_at).toLocaleString("fr-FR"):"")+'</div></div>'+
-(r.ad_id?'<button class="btn sm gray" onclick="goReport('+r.ad_id+')">Voir annonce</button>':'')+
-(r.handled?'<span class="badge b-ok">traite</span>':'<button class="btn sm green" onclick="handleReport('+r.id+')">Marquer traite</button>')+
-'</div></div>';
-}
-}else html='<div class="card"><p class="sub">Aucun signalement. Tres bien.</p></div>';
-document.getElementById("rep-list").innerHTML=html;
-}
-
-async function handleReport(id){
-try{await rpc("admin_handle_report",{p_token:S.token,p_report_id:id});toast("Traite");await refreshAll();}
-catch(e){status("⚠️ "+(e.message||"Erreur"),"err");}
-}
-
-function goReport(adId){
-showTab('ads');
-const el=document.querySelector('#ads-list .card');
-if(el)el.scrollIntoView({behavior:"smooth"});
-}
 if(S){try{openPanel();}catch(e){showErr("Erreur ouverture session : "+e.message);}}
 </script>
 </body>
