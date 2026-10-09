@@ -680,7 +680,7 @@ function renderChatInner(c){
 const msgs=c.msgs||[];
  $("#cmsgs").innerHTML=msgs.map(m=>{
 const mine=(chatRole==="buyer"&&m.sender==="buyer")||(chatRole==="seller"&&m.sender==="seller");
-return '<div class="cmsg '+(mine?"cmine":"ctheir")+'">'+esc(m.body)+
+return '<div class="cmsg '+(mine?"cmine":"ctheir")+'"'+(mine?' onclick="delMsg('+m.id+')" style="cursor:pointer"':'')+'>'+esc(m.body)+
 '<div class="ctime">'+(m.at?new Date(m.at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"")+'</div></div>';
 }).join("")||'<div class="empty">Démarre la conversation.</div>';
 const box=$("#cmsgs");box.scrollTop=box.scrollHeight;
@@ -720,6 +720,12 @@ else await rpc("send_msg",{p_chat_id:chatId,p_body:body,p_seller_token:sess.toke
 await refreshChat();
 checkUnread();
 }catch(e){toast(e.message||"Envoi impossible");inp.value=body;}
+}
+
+async function delMsg(id){
+if(!confirm("Supprimer ce message ? (définitif, pour les deux)"))return;
+try{await rpc("delete_msg",{p_msg_id:id,p_buyer_token:buyerTok(),p_seller_token:(sess?sess.token:null)});await refreshChat();}
+catch(e){toast(e.message||"Impossible");}
 }
 
 /* ===== Badge messages non lus ===== */
