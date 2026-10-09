@@ -216,7 +216,7 @@ h2{font-size:18px;margin-bottom:4px}
       <div class="pp">3 000 Ar</div>
       <div class="meta">Ton annonce remontée en tête de l'accueil + badge 🔥 pendant 7 jours.</div>
     </div>
-    <div class="pcard" onclick="buyBoost('boost30')">
+    <div class="pcard" onclick="buyBoost('boost')">
       <div class="pk">🔥 Coup de pouce — 30 jours</div>
       <div class="pp">10 000 Ar</div>
       <div class="meta">Le meilleur rapport durée / prix.</div>
@@ -507,7 +507,7 @@ const b=currentHero;
 const img='<img class="hbg" src="'+esc(b.image_url)+'" alt="" loading="lazy">';
 const body='<div class="hin">'+
 '<span class="hbadge">✨ Partenaire officiel</span>'+
-'<div class="hadv">Annonceur : <b>'+esc(b.advertiser||"Partenaire")+'</b></div>'+
+'<div class="hadv">Annonceur : <b>'+esc(b.advertiser)+'</b></div>'+
 (b.title?'<div class="htitle">'+esc(b.title)+'</div>':"")+
 (b.description?'<div class="hdesc">'+esc(b.description)+'</div>':"")+
 '<span class="hcta">'+(b.link_url?"Découvrir les offres ↗":"En savoir plus")+'</span>'+
@@ -627,19 +627,29 @@ function openInfo(k){const i=INFO[k];$("#info-t").textContent=i.t;$("#info-b").i
 function closeInfo(){$("#info").hidden=true;}
 function startApp(){$("#welcome").hidden=true;localStorage.setItem("mm_welcomed","1");}
 
-/* ===== 📸 Photo : compression + envoi ===== */
+/* ===== 📸 Photo : compression robuste (tolère les grosses images) ===== */
 function shrinkPhoto(file){
 return new Promise((resolve,reject)=>{
 const img=new Image();
 img.onload=()=>{
-const max=1024;
 let w=img.width,h=img.height;
-if(w>h&&w>max){h=Math.round(h*max/w);w=max;}
-else if(h>=w&&h>max){w=Math.round(w*max/h);h=max;}
+const MAX=1024, MAXB=900*1024;
+const longest=Math.max(w,h);
+if(longest>MAX){
+const r=MAX/longest;
+w=Math.round(w*r);h=Math.round(h*r);
+}
 const c=document.createElement("canvas");
 c.width=w;c.height=h;
 c.getContext("2d").drawImage(img,0,0,w,h);
-c.toBlob(b=>b?resolve(b):reject(new Error("compression")),"image/jpeg",0.72);
+const doQ=function(q){
+c.toBlob(function(b){
+if(!b){reject(new Error("compression"));return;}
+if(b.size<=MAXB||q<=0.3){resolve(b);return;}
+doQ(q-0.15);
+},"image/jpeg",q);
+};
+doQ(0.75);
 URL.revokeObjectURL(img.src);
 };
 img.onerror=()=>reject(new Error("lecture image"));
@@ -766,7 +776,7 @@ if(sess){
 try{
 const ok=await rpc("me_seller",{p_token:sess.token});
 if(ok&&ok.token)saveSess(ok);else saveSess(null);
-}catch(e){/* réseau indisponible — on garde la session */}
+}catch(e){}
 }
 await syncPending();
 await loadAds();
