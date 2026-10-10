@@ -622,11 +622,9 @@ return '<div class="scard" onclick="openInfo(\'contact\')">'+inner+'</div>';
 }
 
 function renderBoosted(){
-const bs=ads.filter(isBoosted);
 const sec=document.getElementById("sec-boost"),row=document.getElementById("boost-row");
-if(!bs.length){sec.hidden=true;row.hidden=true;return;}
-sec.hidden=false;row.hidden=false;
-row.innerHTML=bs.slice(0,12).map(xcard).join("");
+if(sec)sec.hidden=true;
+if(row)row.hidden=true;
 }
 
 function render(){
