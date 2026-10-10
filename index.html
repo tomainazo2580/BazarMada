@@ -76,7 +76,7 @@ main{padding:10px 10px 0}
 .fab:active{transform:scale(.94)}
 .empty{text-align:center;color:#8a938d;padding:34px 10px;font-size:14px}
 .eicon{font-size:42px;margin-bottom:8px}
-.back{border:1px solid #e2e2e2;background:#fff;color:#111;padding:8px 14px;border-radius:10px;font-weight:700;font-size:13px;margin:10px 0 12px}
+.back{display:inline-block;border:none;background:var(--acc);color:#fff;padding:9px 18px;border-radius:10px;font-weight:800;font-size:13px;margin:12px 0 12px;box-shadow:0 2px 8px rgba(14,122,61,.35);cursor:pointer}
 .btn{display:block;width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:800;text-align:center;text-decoration:none}
 .btn:active{opacity:.85}
 .btn.green{background:var(--acc);color:#fff}
@@ -95,6 +95,9 @@ textarea{min-height:80px;resize:vertical}
 #toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#123528;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:50;max-width:90%;text-align:center}
 #toast.show{opacity:1}
 h2{font-size:18px;margin-bottom:4px}
+.acctfooter{margin-top:26px;text-align:center;padding:14px 0 6px}
+.acctfooter button{border:none;background:none;color:#5f6f66;font-weight:700;font-size:13px;padding:0 4px}
+.acctfooter .copy{margin-top:6px;font-size:11px;color:#b9c4be}
 .pcard{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:2px solid var(--acc);cursor:pointer}
 .pcard .pk{font-weight:800;font-size:15px;margin-bottom:2px}
 .pcard .pp{color:var(--acc);font-weight:800;font-size:18px;margin-bottom:8px}
@@ -225,11 +228,12 @@ h2{font-size:18px;margin-bottom:4px}
       <button class="mbtn" onclick="showMine()"><span class="lb">📋 Mes annonces</span><span class="arr">›</span></button>
       <button class="mbtn" onclick="openChats()"><span class="lb">💬 Mes discussions <span id="bdg-chat" class="bdg" style="position:static" hidden></span></span><span class="arr">›</span></button>
       <button class="mbtn" onclick="openQR()"><span class="lb">📱 Partager BazarMada (QR)</span><span class="arr">›</span></button>
-      <button class="mbtn" onclick="openInfo('about')"><span class="lb">ℹ️ À propos</span><span class="arr">›</span></button>
-      <button class="mbtn" onclick="openInfo('contact')"><span class="lb">✉️ Contact</span><span class="arr">›</span></button>
-      <button class="mbtn" onclick="openInfo('secu')"><span class="lb">🛡️ Sécurité</span><span class="arr">›</span></button>
       <button class="mbtn out" onclick="doLogout()">Se déconnecter</button>
     </div>
+    <footer class="acctfooter">
+      <button onclick="openInfo('about')">À propos</button> · <button onclick="openInfo('contact')">Contact</button> · <button onclick="openInfo('secu')">Sécurité</button>
+      <div class="copy">BazarMada © 2025</div>
+    </footer>
   </section>
 
   <section id="page-boost" hidden>
@@ -363,7 +367,7 @@ h2{font-size:18px;margin-bottom:4px}
 </div>
 
 <script>
-/* ===== Mise à jour forcée : si un nouveau service worker prend le contrôle, recharger ===== */
+/* ===== Mise à jour forcée ===== */
 try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener("controllerchange",function(){location.reload();});}catch(e){}
 
 /* ====== CONFIGURATION ====== */
@@ -412,7 +416,6 @@ if(!r.ok){const e=new Error(d.message||("HTTP "+r.status));e.server=true;throw e
 return d;
 }
 
-/* Photo dans le bouton Compte de l'en-tête */
 function renderHeaderAccount(){
 const av=document.getElementById("acc-av");
 if(!av)return;
