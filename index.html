@@ -9,11 +9,7 @@
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <style>
-:root{
---hbg:#f0f7f2; --hfg:#0b3d27; --hsub:#4b6b58; --hbtn:#ffffff;
---acc:#0e7a3d; --accsoft:#e6f4ec; --accfg:#ffffff;
---gold:#f59e0b; --goldsoft:#fffbf0;
-}
+:root{--hbg:#f0f7f2;--hfg:#0b3d27;--hbtn:#ffffff;--acc:#0e7a3d;--accsoft:#e6f4ec;--accfg:#ffffff;--gold:#f59e0b;--goldsoft:#fffbf0}
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif}
 body{background:#fafafa;color:#161616;padding-bottom:90px}
 header{background:var(--hbg);color:var(--hfg);padding:8px 10px;position:sticky;top:0;z-index:10;box-shadow:0 1px 6px rgba(0,0,0,.07)}
@@ -56,7 +52,7 @@ main{padding:10px 10px 0}
 .xp{color:var(--acc);font-weight:800;font-size:12.5px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .grid>.empty{grid-column:1/-1}
-.gcard{background:#fff;border-radius:12px;overflow:hidden;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.05);cursor:pointer;transition:transform .08s}
+.gcard{background:#fff;border-radius:12px;overflow:hidden;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.05);cursor:pointer;transition:transform .08s}
 .gcard:active{transform:scale(.98)}
 .gthumb{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:42px;overflow:hidden}
 .gthumb img{width:100%;height:100%;object-fit:cover;display:block}
@@ -72,6 +68,16 @@ main{padding:10px 10px 0}
 .gm{font-size:10px;color:#8a938d}
 .heart{position:absolute;top:6px;right:6px;border:none;background:rgba(255,255,255,.9);border-radius:999px;width:26px;height:26px;font-size:14px;color:#c9c9c9;display:flex;align-items:center;justify-content:center}
 .heart.on{color:#ef4444}
+.scard{display:block;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 0 0 2px var(--gold) inset,0 1px 3px rgba(0,0,0,.07);position:relative;text-decoration:none;color:#161616}
+.scbadge{position:absolute;top:8px;left:8px;background:var(--gold);color:#111;font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.scard .sgimg{width:100%;aspect-ratio:16/10;object-fit:cover;display:block}
+.sbody{padding:9px 12px 11px}
+.sadv{color:#b45309;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.stitle{font-weight:800;font-size:14px;margin:2px 0 3px;line-height:1.3}
+.sdesc{font-size:12px;color:#4b5563;line-height:1.4;margin-bottom:7px}
+.sfoot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sspace{font-size:10px;color:#9ca3af}
+.sbtn{background:var(--gold);color:#111;font-weight:800;font-size:11.5px;padding:7px 11px;border-radius:9px;display:inline-block}
 .fab{position:fixed;bottom:20px;right:16px;width:58px;height:58px;border-radius:50%;background:var(--acc);color:var(--accfg);border:none;font-size:30px;line-height:1;box-shadow:0 8px 20px rgba(14,122,61,.42),0 2px 5px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.25);z-index:20;cursor:pointer}
 .fab:active{transform:scale(.94)}
 .empty{text-align:center;color:#8a938d;padding:34px 10px;font-size:14px}
@@ -398,8 +404,8 @@ const DEMO=[
 
 let publicAds=[],mine=JSON.parse(localStorage.getItem("mm_ads")||"[]"),myServer=[];
 let favs=new Set(JSON.parse(localStorage.getItem("mm_favs")||"[]"));
-let ads=[],currentCat="Tout",query="",online=false,fresh=[],photoFile=null,currentAd=null;
-let heroes=[],carTimer=null,carIdx=0;
+let ads=[],currentCat="Tout",query="",fresh=[],photoFile=null,currentAd=null;
+let heroes=[],cards=[],cardIdx=0,carTimer=null,carPos=0;
 let authMode="signup";
 let boostAd=null;
 let chatId=null,chatRole=null,chatTimer=null,lastChatJson="";
@@ -440,14 +446,9 @@ const phone=normPhone(f.phone.value);
 btn.disabled=true;btn.textContent="Un instant…";
 try{
 let d;
-if(authMode==="signup"){
-d=await rpc("signup_seller",{p_phone:phone,p_pass:f.pass.value,p_name:f.name.value.trim()});
-}else{
-d=await rpc("login_seller",{p_phone:phone,p_pass:f.pass.value});
-}
-saveSess(d);
-f.reset();
-renderAccount();show("page-sell");
+if(authMode==="signup"){d=await rpc("signup_seller",{p_phone:phone,p_pass:f.pass.value,p_name:f.name.value.trim()});}
+else{d=await rpc("login_seller",{p_phone:phone,p_pass:f.pass.value});}
+saveSess(d);f.reset();renderAccount();show("page-sell");
 toast("Bienvenue sur BazarMada !");
 }catch(err){
 const m=String(err.message||err);
@@ -486,8 +487,7 @@ renderAccount();show("page-account");
 
 /* ===== 📱 Partage QR ===== */
 function openQR(){
-const u=location.origin;
-document.getElementById("qrimg").src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=0&data="+encodeURIComponent(u);
+document.getElementById("qrimg").src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=0&data="+encodeURIComponent(location.origin);
 document.getElementById("qr").hidden=false;
 }
 function closeQR(){document.getElementById("qr").hidden=true;}
@@ -576,7 +576,7 @@ function xcard(a){
 return '<div class="xcard" onclick="openDetail('+a.id+')">'+thumbHTML(a)+'<span class="hfire">🔥</span><div class="xinfo"><div class="xt">'+esc(a.title)+'</div><div class="xp">'+fmt(a.price)+'</div></div></div>';
 }
 
-/* ===== 📣 Carrousel Hero + Boostés ===== */
+/* ===== 📣 Publicités : Héros (carrousel 8s) + Cartes sponsorisées (toutes les 6 annonces) ===== */
 function renderHero(){
 const wrap=document.getElementById("carwrap");
 if(!heroes.length){wrap.hidden=true;return;}
@@ -599,15 +599,26 @@ const slides=document.querySelectorAll("#car .slide");
 const dotsEl=document.getElementById("dots");
 if(slides.length<2){
 if(slides.length===1)slides[0].classList.add("on");
-dotsEl.innerHTML="";carIdx=0;return;
+dotsEl.innerHTML="";carPos=0;return;
 }
 let dh="";slides.forEach(function(s,i){s.classList.toggle("on",i===0);dh+='<span class="dot'+(i===0?" on":"")+'"></span>';});
-dotsEl.innerHTML=dh;carIdx=0;
+dotsEl.innerHTML=dh;carPos=0;
 carTimer=setInterval(function(){
-slides[carIdx].classList.remove("on");dotsEl.children[carIdx].classList.remove("on");
-carIdx=(carIdx+1)%slides.length;
-slides[carIdx].classList.add("on");dotsEl.children[carIdx].classList.add("on");
+slides[carPos].classList.remove("on");dotsEl.children[carPos].classList.remove("on");
+carPos=(carPos+1)%slides.length;
+slides[carPos].classList.add("on");dotsEl.children[carPos].classList.add("on");
 },8000);
+}
+
+function sCard(b){
+const img='<img class="sgimg" src="'+esc(b.image_url)+'" alt="" loading="lazy">';
+const body='<div class="sbody"><div class="sadv">'+esc(b.advertiser||"Partenaire")+'</div>'+
+(b.title?'<div class="stitle">'+esc(b.title)+'</div>':"")+
+(b.description?'<div class="sdesc">'+esc(b.description)+'</div>':"")+
+'<div class="sfoot"><span class="sspace">Espace partenaire</span>'+(b.link_url?'<span class="sbtn">Découvrir</span>':"")+'</div></div>';
+const inner='<span class="scbadge">Sponsorisé</span>'+img+body;
+if(b.link_url)return '<a class="scard" href="'+esc(b.link_url)+'" target="_blank" rel="noopener">'+inner+'</a>';
+return '<div class="scard" onclick="openInfo(\'contact\')">'+inner+'</div>';
 }
 
 function renderBoosted(){
@@ -620,7 +631,18 @@ row.innerHTML=bs.slice(0,12).map(xcard).join("");
 
 function render(){
 const list=ads.filter(function(a){return (currentCat==="Tout"||a.cat===currentCat)&&(a.title+" "+a.city).toLowerCase().indexOf(query)>=0;});
- $("#ads").innerHTML=list.length?list.map(card).join(""):'<div class="empty"><div class="eicon">🔍</div>Aucune annonce trouvée.<br>Essaie une autre recherche — ou publie la première.</div>';
+let html="";
+let n=0;
+for(let i=0;i<list.length;i++){
+html+=card(list[i]);
+n++;
+if(!query&&currentCat==="Tout"&&cards.length&&n%6===0){
+html+=sCard(cards[cardIdx%cards.length]);
+cardIdx++;
+}
+}
+if(!list.length)html='<div class="empty"><div class="eicon">🔍</div>Aucune annonce trouvée.<br>Essaie une autre recherche — ou publie la première.</div>';
+ $("#ads").innerHTML=html;
 }
 
 function toggleFav(id){favs.has(id)?favs.delete(id):favs.add(id);saveFavs();render();}
@@ -830,12 +852,9 @@ return new Promise((resolve,reject)=>{
 const img=new Image();
 img.onload=()=>{
 let w=img.width,h=img.height;
-const MAX=1024, MAXB=900*1024;
+const MAX=1024,MAXB=900*1024;
 const longest=Math.max(w,h);
-if(longest>MAX){
-const r=MAX/longest;
-w=Math.round(w*r);h=Math.round(h*r);
-}
+if(longest>MAX){const r=MAX/longest;w=Math.round(w*r);h=Math.round(h*r);}
 const c=document.createElement("canvas");
 c.width=w;c.height=h;
 c.getContext("2d").drawImage(img,0,0,w,h);
@@ -857,11 +876,7 @@ img.src=URL.createObjectURL(file);
 async function uploadPhoto(file){
 const blob=await shrinkPhoto(file);
 const name="ad_"+Date.now()+"_"+Math.floor(Math.random()*1e6)+".jpg";
-const r=await fetch(SB_URL+"/storage/v1/object/photos/"+name,{
-method:"POST",
-headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"image/jpeg"},
-body:blob
-});
+const r=await fetch(SB_URL+"/storage/v1/object/photos/"+name,{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"image/jpeg"},body:blob});
 if(!r.ok)throw new Error("upload "+r.status);
 return SB_URL+"/storage/v1/object/public/photos/"+name;
 }
@@ -944,21 +959,24 @@ renderSkeletons();
 try{
 const r=await rpc("list_active_ads");
 publicAds=[...fresh,...(Array.isArray(r)?r:[])];
-online=true;
 }catch(e){
 try{
 const r=await fetch(API+"?select=*&status=eq.active&order=created_at.desc",{headers:{apikey:SB_KEY}});
 if(!r.ok)throw new Error("HTTP "+r.status);
 publicAds=[...fresh,...(await r.json())];
-online=true;
-}catch(e2){publicAds=[...DEMO];online=false;}
+}catch(e2){publicAds=[...DEMO];}
 }
 fresh=[];
 ads=[...publicAds,...mine];
 try{
 const rb=await fetch(SB_URL+"/rest/v1/banners?select=*&active=eq.true&order=created_at.desc",{headers:{apikey:SB_KEY}});
-if(rb.ok)heroes=await rb.json();else heroes=[];
-}catch(e){heroes=[];}
+if(rb.ok){
+const all=await rb.json();
+heroes=all.filter(function(b){return b.type!=="card";});
+cards=all.filter(function(b){return b.type==="card";});
+}else{heroes=[];cards=[];}
+}catch(e){heroes=[];cards=[];}
+cardIdx=cards.length?Math.floor(Math.random()*cards.length):0;
 renderHero();
 renderBoosted();
 render();
