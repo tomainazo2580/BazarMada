@@ -548,6 +548,7 @@ function daysLeft(a){if(!a.expires_at)return null;const ms=new Date(a.expires_at
 function show(id){
 document.querySelectorAll("main section").forEach(s=>s.hidden=(s.id!==id));
 if(id!=="page-chat")stopPoll();
+const c=$("#cats");if(c)c.hidden=(id!=="page-home");
 const f=$("#fab");if(f)f.hidden=(id!=="page-home");
 window.scrollTo(0,0);
 }
