@@ -1,4 +1,4 @@
-const CACHE = "bazarmada-v33";
+const CACHE = "bazarmada-v34";
 self.addEventListener("install", e => self.skipWaiting());
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
