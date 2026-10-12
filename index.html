@@ -849,27 +849,67 @@ function startApp(){$("#welcome").hidden=true;localStorage.setItem("mm_welcomed"
 /* ===== 📸 Photo : compression robuste ===== */
 function shrinkPhoto(file){
 return new Promise((resolve,reject)=>{
+function viaImg(){
 const img=new Image();
 img.onload=()=>{
+try{
 let w=img.width,h=img.height;
 const MAX=1024,MAXB=900*1024;
 const longest=Math.max(w,h);
 if(longest>MAX){const r=MAX/longest;w=Math.round(w*r);h=Math.round(h*r);}
 const c=document.createElement("canvas");
 c.width=w;c.height=h;
-c.getContext("2d").drawImage(img,0,0,w,h);
+const ctx=c.getContext("2d");
+ctx.fillStyle="#ffffff";
+ctx.fillRect(0,0,w,h);
+ctx.drawImage(img,0,0,w,h);
 const doQ=function(q){
 c.toBlob(function(b){
-if(!b){reject(new Error("compression"));return;}
+if(b&&b.size>1000){
 if(b.size<=MAXB||q<=0.3){resolve(b);return;}
-doQ(q-0.15);
+doQ(q-0.15);return;
+}
+viaFb();
 },"image/jpeg",q);
 };
 doQ(0.75);
 URL.revokeObjectURL(img.src);
+}catch(e){viaFb();}
 };
-img.onerror=()=>reject(new Error("lecture image"));
+img.onerror=function(){viaFb();};
 img.src=URL.createObjectURL(file);
+}
+function viaFb(){
+const rd=new FileReader();
+rd.onload=function(){
+try{
+const img=new Image();
+img.onload=function(){
+try{
+let w=img.width,h=img.height;
+const MAX=1024;
+const longest=Math.max(w,h);
+if(longest>MAX){const r=MAX/longest;w=Math.round(w*r);h=Math.round(h*r);}
+const c=document.createElement("canvas");
+c.width=w;c.height=h;
+const ctx=c.getContext("2d");
+ctx.fillStyle="#ffffff";
+ctx.fillRect(0,0,w,h);
+ctx.drawImage(img,0,0,w,h);
+c.toBlob(function(b){
+if(b&&b.size>1000){resolve(b);return;}
+reject(new Error("image illisible - reprends la photo"));
+},"image/jpeg",0.7);
+}catch(e){reject(new Error("image illisible - reprends la photo"));}
+};
+img.onerror=function(){reject(new Error("image illisible - reprends la photo"));};
+img.src=rd.result;
+}catch(e){reject(new Error("image illisible - reprends la photo"));}
+};
+rd.onerror=function(){reject(new Error("image illisible - reprends la photo"));}
+rd.readAsDataURL(file);
+}
+viaImg();
 });
 }
 
