@@ -249,7 +249,7 @@ h2{font-size:18px;margin-bottom:4px}
     <div class="pcard" onclick="buyBoost('boost7')">
       <div class="pk">Coup de pouce — 7 jours</div>
       <div class="pp">3 000 Ar</div>
-      <div class="gm">Ton annonce remontée en tête de l'accueil avec badge 🔥 pendant 7 jours.</div>
+      <div class="gm">Ton annonce remontée en vitrine avec badge 🔥 pendant 7 jours.</div>
     </div>
     <div class="pcard" onclick="buyBoost('boost30')">
       <div class="pk">Coup de pouce — 30 jours</div>
@@ -576,7 +576,7 @@ function xcard(a){
 return '<div class="xcard" onclick="openDetail('+a.id+')">'+thumbHTML(a)+'<span class="hfire">🔥</span><div class="xinfo"><div class="xt">'+esc(a.title)+'</div><div class="xp">'+fmt(a.price)+'</div></div></div>';
 }
 
-/* ===== 📣 Publicités : Héros (carrousel 8s) + Cartes sponsorisées (toutes les 6 annonces) ===== */
+/* ===== 📣 Publicités : Héros (carrousel 8s) + Cartes sponsorisées (toutes les 6) ===== */
 function renderHero(){
 const wrap=document.getElementById("carwrap");
 if(!heroes.length){wrap.hidden=true;return;}
@@ -621,6 +621,7 @@ if(b.link_url)return '<a class="scard" href="'+esc(b.link_url)+'" target="_blank
 return '<div class="scard" onclick="openInfo(\'contact\')">'+inner+'</div>';
 }
 
+/* Vitrine « Boostés du moment » en haut */
 function renderBoosted(){
 const bs=ads.filter(isBoosted);
 const sec=document.getElementById("sec-boost"),row=document.getElementById("boost-row");
@@ -630,7 +631,9 @@ row.innerHTML=bs.slice(0,12).map(xcard).join("");
 }
 
 function render(){
-const list=ads.filter(function(a){return (currentCat==="Tout"||a.cat===currentCat)&&(a.title+" "+a.city).toLowerCase().indexOf(query)>=0;});
+let list=ads.filter(function(a){return (currentCat==="Tout"||a.cat===currentCat)&&(a.title+" "+a.city).toLowerCase().indexOf(query)>=0;});
+/* FIX DOUBLON : en navigation normale, les boostées sont en vitrine en haut, pas dans la grille */
+if(!query&&currentCat==="Tout")list=list.filter(function(a){return !isBoosted(a);});
 let html="";
 let n=0;
 for(let i=0;i<list.length;i++){
@@ -641,7 +644,14 @@ html+=sCard(cards[cardIdx%cards.length]);
 cardIdx++;
 }
 }
-if(!list.length)html='<div class="empty"><div class="eicon">🔍</div>Aucune annonce trouvée.<br>Essaie une autre recherche — ou publie la première.</div>';
+if(!list.length){
+const anyBoost=ads.filter(isBoosted).length>0;
+if(anyBoost&&!query&&currentCat==="Tout"){
+html='<div class="empty" style="padding:14px;font-size:13px">Les annonces boostées sont en vitrine en haut 👆</div>';
+}else{
+html='<div class="empty"><div class="eicon">🔍</div>Aucune annonce trouvée.<br>Essaie une autre recherche — ou publie la première.</div>';
+}
+}
  $("#ads").innerHTML=html;
 }
 
@@ -846,7 +856,7 @@ function openInfo(k){const i=INFO[k];$("#info-t").textContent=i.t;$("#info-b").i
 function closeInfo(){$("#info").hidden=true;}
 function startApp(){$("#welcome").hidden=true;localStorage.setItem("mm_welcomed","1");}
 
-/* ===== 📸 Photo : compression robuste ===== */
+/* ===== 📸 Photo : compression robuste (anti-capture d'écran) ===== */
 function shrinkPhoto(file){
 return new Promise((resolve,reject)=>{
 function viaImg(){
@@ -960,7 +970,7 @@ const f=e.target,btn=f.querySelector('button[type=submit]');
 const ad={title:f.title.value.trim(),price:+f.price.value,cat:f.cat.value,city:f.city.value,description:f.desc.value.trim(),emoji:f.emoji.value,phone:normPhone(f.phone.value)};
 btn.disabled=true;
 try{
-if(photoFile){btn.textContent="Photo…";try{ad.photo_url=await uploadPhoto(photoFile);}catch(err){toast("Photo non envoyée — publication sans photo");}}
+if(photoFile){btn.textContent="Photo…";try{ad.photo_url=await uploadPhoto(photoFile);}catch(err){toast(err.message||"Photo non envoyée — publication sans photo");}}
 btn.textContent="Envoi…";
 const saved=await publishAd(ad);
 publicAds.unshift(saved);
