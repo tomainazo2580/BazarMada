@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Recolorer le logo</title>
+<title>Recolorer le logo — B vert, panier silver</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif}
 body{background:#f0f7f2;padding:20px;text-align:center;color:#0b3d27}
@@ -21,15 +21,14 @@ input{margin-bottom:14px}
 </style>
 </head>
 <body>
-<h2>🎨 Recolorer le logo BazarMada</h2>
+<h2>🎨 Logo — B vert, panier silver</h2>
 <p class="note">Choisis l'image du panier (celle de ton client).<br>
-Le bleu marine devient <b>vert BazarMada</b>, le turquoise devient <b>vert clair</b>.<br>
-Puis télécharge les 2 tailles.</p>
+Le <b>B turquoise</b> devient <b>vert BazarMada</b>, le <b>panier bleu</b> devient <b>silver</b>.</p>
 
 <input type="file" id="src" accept="image/*">
 <img id="preview" hidden alt="">
 
-<button id="go" class="btn green hidden" onclick="recolor()">✨ Transformer les couleurs</button>
+<button id="go" class="btn green hidden" onclick="recolor()">✨ Transformer</button>
 
 <div class="res" id="result" hidden></div>
 
@@ -55,32 +54,27 @@ const x=c.getContext("2d");
 x.drawImage(imgEl,0,0);
 const d=x.getImageData(0,0,c.width,c.height);
 const p=d.data;
-/* Cibles : bleu marine (#1f3864 environ) -> vert #0e7a3d ; turquoise (#2ec4b6 environ) -> vert clair #4fbf8b */
-function toGreen(r,g,b){
-/* on détecte par dominance bleue/cyan, en gardant la luminosité */
-const isBlue=(b>r+30&&b>g+10)||(b>60&&r<120&&g<120);
-const isTurq=(g>r+20&&b>r+10&&Math.abs(g-b)<80&&g>100);
-if(isBlue||isTurq){
-/* luminosité du pixel d'origine pour garder les reflets */
+function transform(r,g,b){
 const lum=(0.3*r+0.59*g+0.11*b)/255;
-const isLight=lum>0.55;
-if(isTurq||(isBlue&&g>70)){
-/* turquoise -> vert clair */
-const base=isLight?[79,191,139]:[26,135,84];
+/* --- B turquoise -> vert BazarMada (teinte verte dominante, claire) --- */
+const isTurq=(g>r+25&&b>r+15&&g>110&&Math.abs(g-b)<90);
+if(isTurq){
+const base=lum>0.72?[109,213,161]:(lum>0.55?[74,191,139]:[14,122,61]);
 return [base[0],base[1],base[2]];
 }
-/* bleu marine -> vert BazarMada */
-const base=isLight?[46,140,88]:[14,122,61];
-return [base[0],base[1],base[2]];
+/* --- Bleu marine du panier -> silver métallisé (on garde la luminosité = reflets) --- */
+const isBlue=(b>r+25&&b>=g-10&&b>70&&r<130);
+if(isBlue){
+const s=Math.round(120+lum*120);
+return [s,s,s+3];
 }
 return [r,g,b];
 }
 for(let i=0;i<p.length;i+=4){
-const n=toGreen(p[i],p[i+1],p[i+2]);
+const n=transform(p[i],p[i+1],p[i+2]);
 p[i]=n[0];p[i+1]=n[1];p[i+2]=n[2];
 }
 x.putImageData(d,0,0);
-/* Résultat + 2 tailles */
 const show=document.getElementById("result");
 show.hidden=false;
 const mk=function(size,label){
@@ -88,7 +82,6 @@ const c2=document.createElement("canvas");
 c2.width=size;c2.height=size;
 const x2=c2.getContext("2d");
 x2.fillStyle="#ffffff";x2.fillRect(0,0,size,size);
-/* recadrage carré au centre */
 const side=Math.min(c.width,c.height);
 const sx=(c.width-side)/2, sy=(c.height-side)/2;
 x2.drawImage(c,sx,sy,side,side,0,0,size,size);
