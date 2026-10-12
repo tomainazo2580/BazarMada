@@ -1,103 +1,53 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Recolorer le logo — B vert, panier silver</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif}
-body{background:#f0f7f2;padding:20px;text-align:center;color:#0b3d27}
-h2{margin-bottom:6px}
-.note{font-size:13px;color:#4b6b58;margin-bottom:14px;line-height:1.5}
-input{margin-bottom:14px}
-#preview{max-width:280px;max-height:280px;border:1px solid #ccc;border-radius:12px;background:#fff;padding:8px;margin:6px auto;display:block}
-.btn{display:block;width:100%;max-width:320px;margin:8px auto;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:800}
-.btn.green{background:#0e7a3d;color:#fff}
-.btn.hidden{display:none}
-.res{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
-.res div{text-align:center}
-.res img{width:120px;height:120px;border:1px solid #ccc;border-radius:10px;background:#fff}
-.res button{margin-top:6px;border:none;background:#0e7a3d;color:#fff;font-weight:800;padding:8px 14px;border-radius:9px}
-</style>
-</head>
-<body>
-<h2>🎨 Logo — B vert, panier silver</h2>
-<p class="note">Choisis l'image du panier (celle de ton client).<br>
-Le <b>B turquoise</b> devient <b>vert BazarMada</b>, le <b>panier bleu</b> devient <b>silver</b>.</p>
-
-<input type="file" id="src" accept="image/*">
-<img id="preview" hidden alt="">
-
-<button id="go" class="btn green hidden" onclick="recolor()">✨ Transformer</button>
-
-<div class="res" id="result" hidden></div>
-
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Générateur d'icône panier</title></head>
+<body style="font-family:system-ui;padding:20px;text-align:center;background:#f0f7f2;color:#0b3d27">
+<h2>🛒 Générer l'icône BazarMada</h2>
+<p style="font-size:13px;color:#4b6b58">Touche chaque bouton — les fichiers se téléchargent, déjà nommés.</p>
+<button onclick="dl(512)" style="padding:14px 20px;margin:8px;font-weight:800;background:#0e7a3d;color:#fff;border:none;border-radius:12px">Télécharger 512</button>
+<button onclick="dl(192)" style="padding:14px 20px;margin:8px;font-weight:800;background:#0e7a3d;color:#fff;border:none;border-radius:12px">Télécharger 192</button>
+<canvas id="cv" width="512" height="512" style="max-width:300px;margin-top:14px;border-radius:20px"></canvas>
 <script>
-let imgEl=null;
-document.getElementById("src").addEventListener("change",function(e){
-const f=e.target.files[0];
-if(!f)return;
-imgEl=new Image();
-imgEl.onload=function(){
-document.getElementById("preview").src=imgEl.src;
-document.getElementById("preview").hidden=false;
-document.getElementById("go").classList.remove("hidden");
-};
-imgEl.src=URL.createObjectURL(f);
-});
-
-function recolor(){
-if(!imgEl)return;
+function drawIcon(cv,size){
+const x=cv.getContext("2d");
+/* fond vert arrondi */
+const r=size*0.22;
+x.beginPath();
+x.moveTo(r,0);x.arcTo(size,0,size,size,r);x.arcTo(size,size,0,size,r);x.arcTo(size,0,size,0,r);x.arcTo(0,0,0,0,r);
+x.fillStyle="#0e7a3d";x.fill();
+/* panier : manche + corps, tracé blanc cassé, style flat */
+const s=size/512;
+x.strokeStyle="#f0f7f2";x.lineWidth=26*s;x.lineJoin="round";x.lineCap="round";
+x.beginPath();
+x.moveTo(96*s,136*s);
+x.lineTo(166*s,136*s);
+x.lineTo(180*s,196*s);
+x.lineTo(416*s,196*s);
+x.lineTo(376*s,376*s);
+x.lineTo(196*s,376*s);
+x.lineTo(164*s,226*s);
+x.lineTo(96*s,226*s);
+x.stroke();
+/* roues */
+x.fillStyle="#f0f7f2";
+x.beginPath();x.arc(226*s,436*s,26*s,0,7);x.fill();
+x.beginPath();x.arc(346*s,436*s,26*s,0,7);x.fill();
+/* B vert clair dans le panier */
+x.fillStyle="#a7f3d0";
+x.font="bold "+Math.round(130*s)+"px Arial";
+x.textAlign="center";x.textBaseline="middle";
+x.fillText("B",272*s,292*s);
+}
+drawIcon(document.getElementById("cv"),512);
+function dl(size){
 const c=document.createElement("canvas");
-c.width=imgEl.naturalWidth;c.height=imgEl.naturalHeight;
-const x=c.getContext("2d");
-x.drawImage(imgEl,0,0);
-const d=x.getImageData(0,0,c.width,c.height);
-const p=d.data;
-function transform(r,g,b){
-const lum=(0.3*r+0.59*g+0.11*b)/255;
-/* --- B turquoise -> vert BazarMada (teinte verte dominante, claire) --- */
-const isTurq=(g>r+25&&b>r+15&&g>110&&Math.abs(g-b)<90);
-if(isTurq){
-const base=lum>0.72?[109,213,161]:(lum>0.55?[74,191,139]:[14,122,61]);
-return [base[0],base[1],base[2]];
-}
-/* --- Bleu marine du panier -> silver métallisé (on garde la luminosité = reflets) --- */
-const isBlue=(b>r+25&&b>=g-10&&b>70&&r<130);
-if(isBlue){
-const s=Math.round(120+lum*120);
-return [s,s,s+3];
-}
-return [r,g,b];
-}
-for(let i=0;i<p.length;i+=4){
-const n=transform(p[i],p[i+1],p[i+2]);
-p[i]=n[0];p[i+1]=n[1];p[i+2]=n[2];
-}
-x.putImageData(d,0,0);
-const show=document.getElementById("result");
-show.hidden=false;
-const mk=function(size,label){
-const c2=document.createElement("canvas");
-c2.width=size;c2.height=size;
-const x2=c2.getContext("2d");
-x2.fillStyle="#ffffff";x2.fillRect(0,0,size,size);
-const side=Math.min(c.width,c.height);
-const sx=(c.width-side)/2, sy=(c.height-side)/2;
-x2.drawImage(c,sx,sy,side,side,0,0,size,size);
-const url=c2.toDataURL("image/png");
-const wrap=document.createElement("div");
-wrap.innerHTML='<img src="'+url+'"><br><button>'+label+'</button>';
-wrap.querySelector("button").onclick=function(){
+c.width=size;c.height=size;
+drawIcon(c,size);
 const a=document.createElement("a");
 a.download="icon-"+size+".png";
-a.href=url;
+a.href=c.toDataURL("image/png");
 a.click();
-};
-show.appendChild(wrap);
-};
-mk(512,"Télécharger 512");
-mk(192,"Télécharger 192");
 }
 </script>
 </body>
